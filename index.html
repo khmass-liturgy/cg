@@ -201,15 +201,16 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
       <button onclick="closeMgr()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:2px 6px;line-height:1">✕</button>
     </div>
     <div id="mgr-body" style="flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px"></div>
-    <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-      <div style="font-size:13px;color:var(--text3)">💾 추가·수정·삭제하면 <b style="color:var(--green)">이 기기에 자동 저장</b>됩니다 — 다음에 열어도 유지됩니다</div>
-      <button class="btn-mcancel" onclick="closeMgr()" style="font-size:13.5px">닫기</button>
+    <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
+      <div style="font-size:13px;color:var(--text3)">수정 후 <b style="color:var(--accent)">소스 내보내기</b>로 파일 받아서 회원들에게 배포</div>
+      <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
     </div>
   </div>
 </div>
 <!-- 이미지 확대 오버레이 -->
 <div id="img-zoom-overlay" onclick="closeZoom()"><img id="img-zoom-img" src="" alt="악보 확대"></div>
 <script>
+/*%%CUR_START%%*/
 const CUR=[
   {id:'s1',title:'기타와 친해지기',lessons:[
     {id:'s1l1',title:'클래식 기타란?',desc:'기타의 종류와 각 부위 명칭을 알아봅니다',
@@ -392,6 +393,7 @@ const CUR=[
      practice:['악보 전체를 천천히 눈으로 먼저 읽기','어려운 마디 3개를 골라 집중 반복','전체 연결 연주 — 실수해도 멈추지 말고 끝까지','완성 후 다른 단원 복습과 병행하기']}
   ]}
 ];
+/*%%CUR_END%%*/
 
 // ══════════════════════════════════════════════
 //  초기화
@@ -726,56 +728,107 @@ function cancelMgrEdit(){
   renderMgr();
 }
 
-// ── 강좌 데이터 localStorage 저장/로드 ────────
-// 수정된 videos만 저장 { lessonId: [{...},...] }
-function saveVideosToStorage(){
-  const data={};
-  CUR.forEach(s=>s.lessons.forEach(l=>{
-    data[l.id]=l.videos;
-  }));
-  localStorage.setItem('kg_videos_v2', JSON.stringify(data));
-}
-function loadVideosFromStorage(){
-  try{
-    const data=JSON.parse(localStorage.getItem('kg_videos_v2')||'{}');
-    CUR.forEach(s=>s.lessons.forEach(l=>{
-      if(data[l.id]) l.videos=data[l.id];
-    }));
-  }catch(e){}
+// ── 소스 내보내기 ─────────────────────────────
+// CUR 데이터를 직렬화해서 원본 소스의 마커 사이에 주입 후 다운로드
+function exportHtml(){
+  // CUR을 JS 소스 문자열로 직렬화
+  function serializeVideos(vids){
+    if(!vids||vids.length===0) return '[]';
+    const lines=vids.map(v=>{
+      const t=v.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const c=(v.channel||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const u=(v.url||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const d=(v.dur||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `       {title:'${t}',channel:'${c}',url:'${u}',dur:'${d}'}`;
+    });
+    return `[\n${lines.join(',\n')}]`;
+  }
+
+  // 원본 HTML 소스 가져오기 (스크립트 태그 내부)
+  const scripts=document.querySelectorAll('script');
+  let rawSrc='';
+  for(const s of scripts){
+    if(s.src) continue;
+    if(s.textContent.includes('%%CUR_START%%')){
+      rawSrc=s.textContent; break;
+    }
+  }
+  if(!rawSrc){ alert('소스를 찾을 수 없습니다.'); return; }
+
+  // CUR 블록 새로 생성
+  const newCurLines=['/*%%CUR_START%%*/','const CUR=['];
+  CUR.forEach((stage,si)=>{
+    newCurLines.push(`  {id:'${stage.id}',title:'${stage.title.replace(/'/g,"\\'")}',lessons:[`);
+    stage.lessons.forEach((l,li)=>{
+      const isLast=(li===stage.lessons.length-1);
+      // score, scoreCaption 직렬화
+      const scoreVal = l.score===null ? 'null' : `'${String(l.score).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}'`;
+      const capVal = `'${(l.scoreCaption||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}'`;
+      // videos 직렬화
+      const vidsStr = serializeVideos(l.videos);
+      newCurLines.push(`    {id:'${l.id}',title:'${l.title.replace(/'/g,"\\'")}',desc:'${(l.desc||'').replace(/'/g,"\\'")}',`);
+      newCurLines.push(`     explain:${JSON.stringify(l.explain||'')},`);
+      newCurLines.push(`     points:${JSON.stringify(l.points||[])},`);
+      newCurLines.push(`     score:${scoreVal},scoreCaption:${capVal},`);
+      newCurLines.push(`     videos:${vidsStr},`);
+      newCurLines.push(`     practice:${JSON.stringify(l.practice||[])}}${isLast?'':','}`);
+    });
+    const isLastStage=(si===CUR.length-1);
+    newCurLines.push(`  ]}${isLastStage?'':','}`);
+  });
+  newCurLines.push('];','/*%%CUR_END%%*/');
+  const newCurBlock=newCurLines.join('\n');
+
+  // 원본 소스에서 마커 사이 교체
+  const startMarker='/*%%CUR_START%%*/';
+  const endMarker='/*%%CUR_END%%*/';
+  const si=rawSrc.indexOf(startMarker);
+  const ei=rawSrc.indexOf(endMarker)+endMarker.length;
+  if(si===-1||ei===endMarker.length-1){ alert('마커를 찾을 수 없습니다.'); return; }
+  const newScript=rawSrc.slice(0,si)+newCurBlock+rawSrc.slice(ei);
+
+  // 전체 HTML 재구성
+  const fullHtml=document.documentElement.outerHTML
+    .replace(rawSrc, newScript);
+
+  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='guitar_app.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  alert('✓ 파일이 다운로드됐습니다!\n수정된 guitar_app.html을 회원들에게 배포하세요.');
 }
 
 function saveMgrVideo(lid){
-  const title = document.getElementById('mf-title')?.value.trim()||'';
-  const url   = document.getElementById('mf-url')?.value.trim()||'';
-  const ch    = document.getElementById('mf-ch')?.value.trim()||'';
-  const dur   = document.getElementById('mf-dur')?.value.trim()||'';
-  const msg   = document.getElementById('mf-msg');
-  if(!title){ if(msg) msg.textContent='제목을 입력해 주세요.'; return; }
-  if(!url||!url.startsWith('http')){ if(msg) msg.textContent='올바른 URL을 입력해 주세요.'; return; }
-
-  const lesson = CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
-  if(!lesson) return;
-  const newV = {title, channel:ch, url, dur};
-  if(mgrEditIdx===-1){ lesson.videos.push(newV); }
-  else { lesson.videos[mgrEditIdx]=newV; }
+  const title=document.getElementById('mf-title')?.value.trim()||'';
+  const url  =document.getElementById('mf-url')?.value.trim()||'';
+  const ch   =document.getElementById('mf-ch')?.value.trim()||'';
+  const dur  =document.getElementById('mf-dur')?.value.trim()||'';
+  const msg  =document.getElementById('mf-msg');
+  if(!title){if(msg)msg.textContent='제목을 입력해 주세요.';return;}
+  if(!url||!url.startsWith('http')){if(msg)msg.textContent='올바른 URL을 입력해 주세요.';return;}
+  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
+  if(!lesson)return;
+  const newV={title,channel:ch,url,dur};
+  if(mgrEditIdx===-1){lesson.videos.push(newV);}
+  else{lesson.videos[mgrEditIdx]=newV;}
   mgrEditIdx=null;
-
-  // 저장 + 화면 새로고침
-  saveVideosToStorage();
   const el=document.getElementById('vidlist_'+lid);
-  if(el) el.innerHTML=renderVideoList(lid, lesson.videos);
+  if(el)el.innerHTML=renderVideoList(lid,lesson.videos);
   renderMgr();
 }
 
-function mgrDelVideo(lid, idx){
-  if(!confirm('이 강좌를 삭제할까요?')) return;
+function mgrDelVideo(lid,idx){
+  if(!confirm('이 강좌를 삭제할까요?'))return;
   const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
-  if(!lesson) return;
+  if(!lesson)return;
   lesson.videos.splice(idx,1);
   mgrEditIdx=null;
-  saveVideosToStorage();
   const el=document.getElementById('vidlist_'+lid);
-  if(el) el.innerHTML=renderVideoList(lid, lesson.videos);
+  if(el)el.innerHTML=renderVideoList(lid,lesson.videos);
   renderMgr();
 }
 
@@ -826,9 +879,6 @@ function renderWelcome(){
 
 // 인덱스 부착 + 초기화
 CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
-
-// 저장된 강좌 데이터 불러오기
-loadVideosFromStorage();
 
 renderSidebar();
 renderWelcome();
