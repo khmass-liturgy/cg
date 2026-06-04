@@ -174,6 +174,30 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .btn-show-add:hover{background:#cfeadc}
 .msg-saved{font-size:13px;color:var(--green);font-weight:500}
 .msg-err{font-size:13px;color:var(--red);font-weight:500}
+/* ── Google Sheets 연동 UI ── */
+.sheet-setup-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.sheet-setup-box.connected{background:var(--green-bg);border-color:#a8d5b8}
+.sheet-setup-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:10px}
+.sheet-url-preview{font-size:12px;color:var(--text3);word-break:break-all;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid var(--border);margin-bottom:10px}
+.sheet-setup-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-sheet-reload{background:var(--green);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:13.5px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-sheet-reload:hover{background:#236040}
+.btn-sheet-disconnect{background:none;border:1px solid var(--border2);border-radius:7px;padding:8px 12px;font-size:13.5px;color:var(--text3);cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-sheet-disconnect:hover{color:var(--red);border-color:var(--red)}
+.sheet-setup-steps{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.sheet-step{font-size:13.5px;color:var(--text);line-height:1.65}
+.btn-sheet-copy{display:inline-flex;align-items:center;gap:5px;background:var(--blue-bg);color:var(--blue);border:1px solid #b8d0e8;border-radius:7px;padding:8px 14px;font-size:13.5px;text-decoration:none;font-weight:500}
+.btn-sheet-copy:hover{background:#d0e4f5}
+.sheet-input-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.sheet-guide-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.sheet-guide-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:10px}
+.sheet-guide-table{border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12.5px}
+.sgt-row{display:grid;grid-template-columns:0.8fr 1.2fr 1fr 2fr 0.6fr;gap:0;border-bottom:1px solid var(--border)}
+.sgt-row:last-child{border-bottom:none}
+.sgt-row>div{padding:7px 10px;border-right:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sgt-row>div:last-child{border-right:none}
+.sgt-head{background:var(--accent-light);font-weight:600;color:var(--accent)}
+.sheet-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);border:1px solid #a8d5b8;border-radius:20px;padding:3px 10px;font-size:12px;color:var(--green);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -258,8 +282,8 @@ const CUR=[
        {title:'클래식기타 조율(튜닝)하는 방법',channel:'도약닷컴 비바!클래식기타',url:'https://www.youtube.com/watch?v=rBMyoGEs1fY',dur:'6분'}],
      practice:['눈 감고 6번줄부터 1번줄까지 이름 말하기 (E A D G B e)','반대로 1번줄부터 6번줄까지도 말하기 (e B G D A E)','각 줄을 퉁기며 소리 차이 느껴보기','매일 아침 일어나자마자 3번씩 외우기!']},
     {id:'s1l3',title:'기타 튜닝하기',desc:'스마트폰 튜너 앱으로 정확하게 튜닝하는 법',
-     explain:'<b>튜닝(tuning)</b>이란 기타 줄의 음높이를 정확히 맞추는 것입니다. 가장 쉬운 방법은 스마트폰 <b>튜너 앱</b>을 사용하는 것입니다. "GuitarTuna", "Pano Tuner" 등 무료 앱을 추천합니다.\n\n줄감개(헤드의 조율 나사)를 <b>조이면 음이 높아지고</b>, <b>풀면 낮아집니다</b>. 항상 낮은 음에서 올려서 맞추는 습관을 들이세요.',
-     points:['튜닝은 연주 전 매번 반드시 확인','줄감게를 조금씩 돌리며 천천히 맞추기','항상 음을 낮은 쪽에서 올리며 맞추기 (줄 끊김 방지)','튜너 바늘이 정중앙 초록색에 오면 완료'],
+     explain:'<b>튜닝(tuning)</b>이란 기타 줄의 음높이를 정확히 맞추는 것입니다. 가장 쉬운 방법은 스마트폰 <b>튜너 앱</b>을 사용하는 것입니다. "GuitarTuna", "Pano Tuner" 등 무료 앱을 추천합니다.\n\n페그(헤드의 조율 나사)를 <b>조이면 음이 높아지고</b>, <b>풀면 낮아집니다</b>. 항상 낮은 음에서 올려서 맞추는 습관을 들이세요.',
+     points:['튜닝은 연주 전 매번 반드시 확인','페그를 조금씩 돌리며 천천히 맞추기','항상 음을 낮은 쪽에서 올리며 맞추기 (줄 끊김 방지)','튜너 바늘이 정중앙 초록색에 오면 완료'],
      score:null,scoreCaption:'',
      videos:[
        {title:'클래식기타 튜닝 — 손쉽게 하는 클래식기타 조율',channel:'도약닷컴 워너비클래식기타',url:'https://www.youtube.com/watch?v=8QEi2kd5z0Y',dur:'6분'},
@@ -421,9 +445,8 @@ const CUR=[
   ]}
 ];
 
-// 인덱스 부착
-CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
-
+// ══════════════════════════════════════════════
+//  초기화
 let done=new Set(JSON.parse(localStorage.getItem('kg_done')||'[]'));
 let cur=null;
 let openS=new Set(['s1']);
@@ -629,18 +652,91 @@ function deleteGdriveLink(lessonId){
 function openZoom(lessonId){}
 function closeZoom(){document.getElementById('img-zoom-overlay').classList.remove('open');}
 
-function loadCustomVideos(){
-  try{ return JSON.parse(localStorage.getItem('kg_videos')||'{}'); }
-  catch(e){ return {}; }
-}
-function saveCustomVideos(cv){ localStorage.setItem('kg_videos',JSON.stringify(cv)); }
+function loadCustomVideos(){ return {}; } // Sheets 방식에서는 미사용 (하위호환용)
 
-// 영상 목록 렌더 (커스텀 우선, 없으면 기본 데이터)
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════════════════
+//  Google Sheets 연동 — 강좌 공유 관리
+// ══════════════════════════════════════════════
+// sheetData: { lessonId: [{title,channel,url,dur}, ...], ... }
+let sheetData = {};
+let sheetUrl  = localStorage.getItem('kg_sheet_url') || '';
+let sheetLoading = false;
+let sheetError   = '';
+let sheetLastLoaded = 0; // 마지막 로드 시각 (ms)
+const SHEET_CACHE_MS = 60000; // 1분 캐시
+
+// Google Sheets 공개 CSV URL 변환
+// 입력: https://docs.google.com/spreadsheets/d/ID/edit  or  /pub?...
+// 출력: https://docs.google.com/spreadsheets/d/ID/gviz/tq?tqx=out:csv
+function sheetToCsvUrl(url){
+  const m = url.match(/\/spreadsheets\/d\/([^\/\?]+)/);
+  if(!m) return null;
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv`;
+}
+
+// CSV 파싱 (간단 구현 — 큰따옴표 처리 포함)
+function parseCsv(text){
+  const rows = [];
+  const lines = text.split('\n');
+  for(const line of lines){
+    if(!line.trim()) continue;
+    const cols = [];
+    let cur = '', inQ = false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ inQ=!inQ; continue; }
+      if(c===',' && !inQ){ cols.push(cur.trim()); cur=''; continue; }
+      cur+=c;
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+  return rows;
+}
+
+// 시트 데이터 로드
+// 시트 형식 (헤더 행 포함):
+// 레슨ID | 제목 | 채널 | URL | 재생시간
+async function loadSheetData(force=false){
+  if(!sheetUrl){ sheetData={}; return; }
+  const now=Date.now();
+  if(!force && now-sheetLastLoaded < SHEET_CACHE_MS) return; // 캐시 유효
+  const csvUrl=sheetToCsvUrl(sheetUrl);
+  if(!csvUrl){ sheetError='올바른 구글 시트 URL이 아닙니다.'; return; }
+  sheetLoading=true; sheetError='';
+  try{
+    const res=await fetch(csvUrl);
+    if(!res.ok) throw new Error('시트를 불러올 수 없습니다 ('+res.status+')');
+    const text=await res.text();
+    const rows=parseCsv(text);
+    const newData={};
+    for(let i=1;i<rows.length;i++){ // 0번째는 헤더
+      const [lid,title,channel,url,dur]=rows[i];
+      if(!lid||!url) continue;
+      if(!newData[lid]) newData[lid]=[];
+      newData[lid].push({title:title||'',channel:channel||'',url:url||'',dur:dur||''});
+    }
+    sheetData=newData;
+    sheetLastLoaded=Date.now();
+    sheetError='';
+  } catch(e){
+    sheetError=e.message||'시트 로드 실패';
+  }
+  sheetLoading=false;
+}
+
+// 영상 목록 렌더 — 시트 데이터 우선, 없으면 기본 데이터
 function renderVideoList(lessonId, defaultVideos){
-  const cv=loadCustomVideos();
-  const vids=cv[lessonId]||defaultVideos;
-  if(!vids||vids.length===0) return '<div class="vid-empty">등록된 강좌가 없습니다. 강좌 관리에서 추가해 주세요.</div>';
-  return vids.map(v=>`
+  const vids = (sheetData[lessonId]&&sheetData[lessonId].length>0)
+    ? sheetData[lessonId]
+    : defaultVideos;
+  const fromSheet = !!(sheetData[lessonId]&&sheetData[lessonId].length>0);
+  if(!vids||vids.length===0) return '<div class="vid-empty">등록된 강좌가 없습니다.</div>';
+  return `
+    ${fromSheet?'<div class="sheet-badge">📊 구글 시트에서 불러옴</div>':''}
+    ${vids.map(v=>`
     <div class="video-item" onclick="window.open('${escHtml(v.url)}','_blank')">
       <div class="video-thumb">▶</div>
       <div class="video-info">
@@ -648,175 +744,150 @@ function renderVideoList(lessonId, defaultVideos){
         <div class="video-channel">${escHtml(v.channel)}</div>
       </div>
       <div class="video-badge">${escHtml(v.dur||'')}</div>
-    </div>`).join('');
+    </div>`).join('')}`;
 }
-
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // 현재 선택된 레슨 ID (모달에서 사용)
 let adminLessonId=null;
-let editingIdx=null; // 수정 중인 인덱스
 
-// ── 모달 열기 ──────────────────────────────
+// ── 모달 열기/닫기 ─────────────────────────
 function openAdmin(){
-  // 현재 열린 레슨이 있으면 그 레슨으로, 없으면 첫 레슨
-  const lid = cur ? cur.id : CUR[0].lessons[0].id;
-  openAdminForLesson(lid);
-}
-
-function openAdminForLesson(lid){
-  adminLessonId=lid;
-  editingIdx=null;
+  adminLessonId = cur ? cur.id : CUR[0].lessons[0].id;
   document.getElementById('modal-overlay').classList.add('open');
   renderModal();
 }
-
+function openAdminForLesson(lid){
+  adminLessonId=lid;
+  document.getElementById('modal-overlay').classList.add('open');
+  renderModal();
+}
 function closeAdmin(){
   document.getElementById('modal-overlay').classList.remove('open');
-  editingIdx=null;
 }
-
 function closeAdminOutside(e){
   if(e.target===document.getElementById('modal-overlay')) closeAdmin();
 }
 
-// ── 모달 내용 렌더 ─────────────────────────
+// ── 모달 렌더 ──────────────────────────────
 function renderModal(){
-  const cv=loadCustomVideos();
-
-  // 레슨 선택 옵션 생성
-  const opts=CUR.map(s=>s.lessons.map(l=>`<option value="${l.id}" ${l.id===adminLessonId?'selected':''}>[${s.title}] ${l.title}</option>`).join('')).join('');
-
-  // 현재 레슨의 영상 목록
-  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
-  const vids=cv[adminLessonId]||(lesson?[...lesson.videos]:[]);
-
-  const vidItems=vids.length===0
-    ?'<div class="vid-empty">등록된 강좌가 없습니다. 아래에서 추가해 주세요.</div>'
-    :vids.map((v,i)=>`
-      <div class="vid-mgr-item">
-        <div class="vid-mgr-thumb">▶</div>
-        <div class="vid-mgr-info">
-          <div class="vid-mgr-title">${escHtml(v.title)}</div>
-          <div class="vid-mgr-ch">${escHtml(v.channel)}</div>
-          <div class="vid-mgr-url">${escHtml(v.url)}</div>
-        </div>
-        <div class="vid-mgr-actions">
-          <button class="btn-vid-edit" onclick="startEdit(${i})">수정</button>
-          <button class="btn-vid-del" onclick="deleteVideo(${i})">삭제</button>
-        </div>
-      </div>`).join('');
-
-  // 추가/수정 폼
-  let formHtml='';
-  if(editingIdx===null){
-    formHtml=`
-      <button class="btn-show-add" onclick="startAdd()">＋ 새 강좌 추가</button>`;
-  } else {
-    const isEdit=editingIdx>=0;
-    const v=isEdit?vids[editingIdx]:{title:'',channel:'',url:'',dur:''};
-    formHtml=`
-      <div class="add-form">
-        <div class="add-form-title">${isEdit?'✏ 강좌 수정':'＋ 새 강좌 추가'}</div>
-        <div class="form-grid full">
-          <div class="form-field">
-            <label>영상 제목 *</label>
-            <input id="f-title" type="text" placeholder="예: 클래식 기타 기초 강의 1편" value="${escHtml(v.title)}">
-          </div>
-        </div>
-        <div class="form-grid" style="margin-top:10px">
-          <div class="form-field">
-            <label>채널명</label>
-            <input id="f-channel" type="text" placeholder="예: 기타 마스터 TV" value="${escHtml(v.channel)}">
-          </div>
-          <div class="form-field">
-            <label>재생 시간</label>
-            <input id="f-dur" type="text" placeholder="예: 12분" value="${escHtml(v.dur||'')}">
-          </div>
-        </div>
-        <div class="form-grid full" style="margin-top:10px">
-          <div class="form-field">
-            <label>유튜브 URL *</label>
-            <input id="f-url" type="url" placeholder="https://www.youtube.com/watch?v=..." value="${escHtml(v.url)}">
-            <div class="form-hint">유튜브 영상 주소를 그대로 붙여넣으세요</div>
-          </div>
-        </div>
-        <div class="form-actions">
-          <button class="btn-add-confirm" onclick="saveVideo(${isEdit?editingIdx:-1})">${isEdit?'수정 저장':'추가하기'}</button>
-          <button class="btn-add-cancel" onclick="cancelEdit()">취소</button>
-          <span id="form-msg"></span>
-        </div>
-      </div>`;
-  }
-
+  const connected = !!sheetUrl;
   document.getElementById('modal-body').innerHTML=`
-    <div class="modal-select-row">
-      <label>레슨 선택</label>
-      <select onchange="changeAdminLesson(this.value)">${opts}</select>
-    </div>
-    <div>
-      <div style="font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:8px">
-        현재 등록된 강좌 <span style="color:var(--accent)">(${vids.length}개)</span>
-        ${cv[adminLessonId]?'<span style="font-size:11px;color:var(--green);margin-left:6px">● 직접 등록</span>':'<span style="font-size:11px;color:var(--text3);margin-left:6px">○ 기본값</span>'}
+
+    <!-- ① 구글 시트 연결 설정 -->
+    <div class="sheet-setup-box ${connected?'connected':''}">
+      <div class="sheet-setup-title">
+        ${connected
+          ?'<span style="color:var(--green)">✓ 구글 시트 연결됨</span>'
+          :'📊 구글 시트 연결 설정'}
       </div>
-      <div class="vid-mgr-list">${vidItems}</div>
+      ${connected
+        ?`<div class="sheet-url-preview">${escHtml(sheetUrl)}</div>
+           <div class="sheet-setup-actions">
+             <button class="btn-sheet-reload" onclick="reloadSheet()">🔄 지금 새로고침</button>
+             <button class="btn-sheet-disconnect" onclick="disconnectSheet()">연결 해제</button>
+             ${sheetError?`<span class="msg-err">${escHtml(sheetError)}</span>`:''}
+             ${sheetLoading?'<span style="font-size:13px;color:var(--text3)">불러오는 중...</span>':''}
+           </div>`
+        :`<div class="sheet-setup-steps">
+            <div class="sheet-step"><b>①</b> 아래 시트 양식을 복사해서 내 구글 드라이브에 저장</div>
+            <div class="sheet-step"><b>②</b> 파일 → <b>공유 → 웹에 게시</b> → CSV 형식으로 게시</div>
+            <div class="sheet-step"><b>③</b> 게시된 URL을 아래에 붙여넣기 <span style="color:var(--text3)">(또는 시트 편집 URL도 가능)</span></div>
+          </div>
+          <div style="margin:10px 0 6px">
+            <a href="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/copy"
+               target="_blank" class="btn-sheet-copy">📋 시트 양식 복사하기</a>
+          </div>
+          <div class="sheet-input-row">
+            <input id="sheet-url-inp" class="score-gdrive-input" type="url"
+              placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+            <button class="btn-gdrive-save" onclick="connectSheet()">연결</button>
+          </div>
+          ${sheetError?`<div class="msg-err" style="margin-top:6px">${escHtml(sheetError)}</div>`:''}`
+      }
     </div>
-    ${formHtml}
-    ${cv[adminLessonId]?`<button onclick="resetToDefault('${adminLessonId}')" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;text-align:left">↩ 이 레슨을 기본값으로 초기화</button>`:''}
+
+    <!-- ② 시트 사용법 안내 -->
+    <div class="sheet-guide-box">
+      <div class="sheet-guide-title">📝 구글 시트 작성 방법</div>
+      <div class="sheet-guide-table">
+        <div class="sgt-row sgt-head">
+          <div>A열: 레슨ID</div><div>B열: 제목</div><div>C열: 채널명</div><div>D열: URL</div><div>E열: 시간</div>
+        </div>
+        <div class="sgt-row">
+          <div>s1l1</div><div>기타 입문 강의</div><div>기타채널</div><div>https://youtu.be/...</div><div>10분</div>
+        </div>
+        <div class="sgt-row">
+          <div>s2l1</div><div>자세 강의</div><div>정샘기타</div><div>https://youtu.be/...</div><div>8분</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-top:8px">
+        ※ 레슨ID 목록: s1l1~s1l4 / s2l1~s2l3 / s3l1~s3l2 / s4l1~s4l2 / s5l1~s5l3 / s6l1~s6l2 / s7l1~s7l3<br>
+        ※ 시트를 수정하면 앱에서 🔄 새로고침 버튼을 눌러주세요 (또는 1분 후 자동 반영)
+      </div>
+    </div>
+
+    <!-- ③ 현재 시트 데이터 미리보기 -->
+    ${connected?`
+    <div>
+      <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:10px">
+        현재 시트에서 불러온 강좌 목록
+        <span style="font-size:12px;color:var(--text3);font-weight:400;margin-left:8px">
+          (총 ${Object.values(sheetData).reduce((a,v)=>a+v.length,0)}개 강좌)
+        </span>
+      </div>
+      ${Object.keys(sheetData).length===0
+        ?'<div class="vid-empty">시트에 데이터가 없거나 아직 불러오지 않았습니다.</div>'
+        :Object.entries(sheetData).map(([lid,vids])=>{
+          const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
+          return`<div style="margin-bottom:12px">
+            <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:5px">
+              ${lesson?lesson.title:lid}
+            </div>
+            ${vids.map(v=>`
+              <div class="vid-mgr-item">
+                <div class="vid-mgr-thumb">▶</div>
+                <div class="vid-mgr-info">
+                  <div class="vid-mgr-title">${escHtml(v.title)}</div>
+                  <div class="vid-mgr-ch">${escHtml(v.channel)}</div>
+                  <div class="vid-mgr-url">${escHtml(v.url)}</div>
+                </div>
+                <div class="video-badge" style="font-size:12px">${escHtml(v.dur)}</div>
+              </div>`).join('')}
+          </div>`;
+        }).join('')}
+    </div>`:''}
   `;
 }
 
-function changeAdminLesson(lid){ adminLessonId=lid; editingIdx=null; renderModal(); }
-function startAdd(){ editingIdx=-1; renderModal(); }
-function startEdit(i){ editingIdx=i; renderModal(); }
-function cancelEdit(){ editingIdx=null; renderModal(); }
-
-function saveVideo(idx){
-  const title=document.getElementById('f-title').value.trim();
-  const url=document.getElementById('f-url').value.trim();
-  const channel=document.getElementById('f-channel').value.trim();
-  const dur=document.getElementById('f-dur').value.trim();
-  const msg=document.getElementById('form-msg');
-
-  if(!title){ msg.className='msg-err'; msg.textContent='제목을 입력해 주세요.'; return; }
-  if(!url){ msg.className='msg-err'; msg.textContent='URL을 입력해 주세요.'; return; }
-  if(!url.startsWith('http')){ msg.className='msg-err'; msg.textContent='올바른 URL을 입력해 주세요.'; return; }
-
-  const cv=loadCustomVideos();
-  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
-  if(!cv[adminLessonId]) cv[adminLessonId]=[...(lesson?lesson.videos:[])];
-
-  const newV={title,channel,url,dur};
-  if(idx>=0) cv[adminLessonId][idx]=newV;
-  else cv[adminLessonId].push(newV);
-
-  saveCustomVideos(cv);
-  editingIdx=null;
+async function connectSheet(){
+  const inp=document.getElementById('sheet-url-inp');
+  const url=inp?inp.value.trim():'';
+  if(!url){sheetError='URL을 입력해 주세요.';renderModal();return;}
+  if(!url.includes('docs.google.com/spreadsheets')){
+    sheetError='구글 스프레드시트 URL만 사용 가능합니다.';renderModal();return;
+  }
+  sheetUrl=url;
+  localStorage.setItem('kg_sheet_url', sheetUrl);
+  sheetLastLoaded=0;
+  await loadSheetData(true);
   renderModal();
-  refreshVideoSection();
+  refreshVideoAllSections();
 }
 
-function deleteVideo(idx){
-  if(!confirm('이 강좌를 삭제할까요?')) return;
-  const cv=loadCustomVideos();
-  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
-  if(!cv[adminLessonId]) cv[adminLessonId]=[...(lesson?lesson.videos:[])];
-  cv[adminLessonId].splice(idx,1);
-  saveCustomVideos(cv);
+async function reloadSheet(){
+  await loadSheetData(true);
   renderModal();
-  refreshVideoSection();
+  refreshVideoAllSections();
 }
 
-function resetToDefault(lid){
-  if(!confirm('이 레슨의 강좌 목록을 기본값으로 초기화할까요?')) return;
-  const cv=loadCustomVideos();
-  delete cv[lid];
-  saveCustomVideos(cv);
+function disconnectSheet(){
+  if(!confirm('구글 시트 연결을 해제하면 기본 강좌 목록으로 돌아갑니다. 해제할까요?')) return;
+  sheetUrl=''; sheetData={}; sheetError='';
+  localStorage.removeItem('kg_sheet_url');
   renderModal();
-  refreshVideoSection();
+  refreshVideoAllSections();
 }
 
-// 모달 저장 후 레슨 화면의 영상 목록만 새로고침
 function refreshVideoSection(){
   if(!cur) return;
   const el=document.getElementById('vidlist_'+cur.id);
@@ -824,6 +895,12 @@ function refreshVideoSection(){
   const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===cur.id);
   if(lesson) el.innerHTML=renderVideoList(cur.id, lesson.videos);
 }
+
+function refreshVideoAllSections(){
+  // 현재 열려있는 레슨의 영상 목록만 새로고침
+  refreshVideoSection();
+}
+
 
 // 환영 화면
 function renderWelcome(){
@@ -869,8 +946,18 @@ function renderWelcome(){
   </div>`;
 }
 
+// 인덱스 부착 + 초기화
+CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+
 renderSidebar();
 renderWelcome();
+
+// 시트 URL 저장돼 있으면 자동 로드
+if(sheetUrl){
+  loadSheetData().then(()=>{
+    refreshVideoSection();
+  });
+}
 </script>
 </body>
 </html>
