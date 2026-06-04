@@ -8,14 +8,14 @@
 <style>
 :root{--bg:#f8f6f1;--surface:#fff;--surface2:#f2efe8;--border:#e0dbd0;--border2:#ccc7b8;--accent:#8b6914;--accent-light:#f5edd8;--accent-mid:#c49a2a;--text:#1a1810;--text2:#5a5448;--text3:#9a9080;--green:#2d6a4f;--green-bg:#e8f5ee;--blue:#1a4a7a;--blue-bg:#e8f0f8;--red:#8b2020;--red-bg:#faeaea}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;font-size:15px}
 #header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.06)}
 .hdr-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
 .hdr-logo{display:flex;align-items:center;gap:10px}
-.hdr-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;color:var(--accent)}
-.hdr-sub{font-size:11px;color:var(--text3);margin-left:2px}
+.hdr-title{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--accent)}
+.hdr-sub{font-size:12px;color:var(--text3);margin-left:2px}
 .hdr-right{margin-left:auto}
-.progress-pill{background:var(--accent-light);border:1px solid #e0c87a;border-radius:20px;padding:4px 12px;font-size:11.5px;color:var(--accent);font-weight:500}
+.progress-pill{background:var(--accent-light);border:1px solid #e0c87a;border-radius:20px;padding:4px 12px;font-size:12.5px;color:var(--accent);font-weight:500}
 #layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 56px)}
 #sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;position:sticky;top:56px;height:calc(100vh - 56px)}
 .sidebar-section{border-bottom:1px solid var(--border)}
@@ -24,8 +24,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .stage-header.open{background:var(--accent-light)}
 .stage-badge{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text2);flex-shrink:0}
 .stage-header.open .stage-badge{background:var(--accent);border-color:var(--accent);color:#fff}
-.stage-name{font-size:12.5px;font-weight:500;color:var(--text);flex:1;line-height:1.3}
-.stage-arrow{font-size:10px;color:var(--text3);transition:transform .2s}
+.stage-name{font-size:13.5px;font-weight:500;color:var(--text);flex:1;line-height:1.3}
+.stage-arrow{font-size:11px;color:var(--text3);transition:transform .2s}
 .stage-header.open .stage-arrow{transform:rotate(90deg)}
 .lesson-list{display:none;flex-direction:column}
 .lesson-list.open{display:flex}
@@ -35,84 +35,180 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .lesson-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0}
 .lesson-item.active .lesson-dot{background:var(--accent)}
 .lesson-item.done .lesson-dot{background:var(--green)}
-.lesson-item-text{font-size:12px;color:var(--text2);line-height:1.4;flex:1}
+.lesson-item-text{font-size:13px;color:var(--text2);line-height:1.4;flex:1}
 .lesson-item.active .lesson-item-text{color:var(--accent);font-weight:500}
-.done-check{font-size:11px;color:var(--green)}
+.done-check{font-size:12px;color:var(--green)}
 #main{padding:28px 32px;overflow-y:auto;max-width:800px}
 .lesson-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
 .lesson-card-header{background:linear-gradient(135deg,var(--accent-light),#fdf8ec);border-bottom:1px solid var(--border);padding:18px 22px}
-.lesson-card-stage{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.5px;margin-bottom:4px}
-.lesson-card-title{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
-.lesson-card-desc{font-size:13px;color:var(--text2)}
+.lesson-card-stage{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.5px;margin-bottom:4px}
+.lesson-card-title{font-family:'Noto Serif KR',serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:4px}
+.lesson-card-desc{font-size:14px;color:var(--text2)}
 .lesson-card-body{padding:22px}
 .section-block{margin-bottom:20px}
-.section-label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.sicon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.section-label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.sicon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px}
 .si-blue{background:var(--blue-bg)}
 .si-gold{background:var(--accent-light)}
 .si-green{background:var(--green-bg)}
 .si-red{background:var(--red-bg)}
 .si-gray{background:var(--surface2)}
-.explain-text{font-size:13.5px;line-height:1.85;color:var(--text)}
+.explain-text{font-size:14.5px;line-height:1.85;color:var(--text)}
 .explain-text b{color:var(--accent);font-weight:600}
 .point-list{display:flex;flex-direction:column;gap:8px}
 .point-item{display:flex;gap:10px;align-items:flex-start;background:var(--accent-light);border:1px solid #e8d88a;border-radius:8px;padding:10px 13px}
-.point-num{width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.point-text{font-size:13px;line-height:1.6;color:var(--text)}
+.point-num{width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.point-text{font-size:14px;line-height:1.6;color:var(--text)}
 .score-area{background:var(--green-bg);border:1px solid #a8d5b8;border-radius:10px;overflow:hidden}
 .score-area-inner{padding:16px 18px}
 .score-img-slot{background:#fff;border:2px dashed #a8d5b8;border-radius:8px;min-height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
 .score-img-slot img{max-width:100%;max-height:240px;display:block;border-radius:6px}
 .score-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--green);opacity:.6}
-.score-placeholder span{font-size:11px;text-align:center}
-.score-ascii{font-family:monospace;font-size:12.5px;background:#fff;padding:14px 16px;border-radius:8px;border:1px solid #a8d5b8;white-space:pre;line-height:1.8;color:#1a4a30;overflow-x:auto;margin-bottom:12px}
-.score-caption{font-size:12px;color:var(--green);text-align:center}
+.score-placeholder span{font-size:12px;text-align:center}
+.score-ascii{font-family:monospace;font-size:13.5px;background:#fff;padding:14px 16px;border-radius:8px;border:1px solid #a8d5b8;white-space:pre;line-height:1.8;color:#1a4a30;overflow-x:auto;margin-bottom:12px}
+.score-caption{font-size:13px;color:var(--green);text-align:center}
 .video-list{display:flex;flex-direction:column;gap:10px}
 .video-item{display:flex;align-items:center;gap:12px;background:#fff5f5;border:1px solid #f0b8b8;border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;text-decoration:none}
 .video-item:hover{background:#ffe8e8;border-color:var(--red);transform:translateY(-1px);box-shadow:0 3px 10px rgba(139,32,32,.1)}
 .video-thumb{width:48px;height:34px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff}
 .video-info{flex:1}
-.video-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;line-height:1.4}
-.video-channel{font-size:11px;color:var(--text3)}
-.video-badge{font-size:10px;background:var(--red-bg);color:var(--red);border:1px solid #f0b8b8;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.video-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;line-height:1.4}
+.video-channel{font-size:12px;color:var(--text3)}
+.video-badge{font-size:11px;background:var(--red-bg);color:var(--red);border:1px solid #f0b8b8;border-radius:10px;padding:2px 8px;white-space:nowrap}
 .practice-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
 .practice-steps{display:flex;flex-direction:column;gap:7px}
-.practice-step{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.6;color:var(--text)}
-.step-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.practice-step{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.6;color:var(--text)}
+.step-icon{font-size:15px;flex-shrink:0;margin-top:1px}
 .lesson-footer{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid var(--border);background:var(--surface2)}
-.btn-done{display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.btn-done{display:flex;align-items:center;gap:8px;background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
 .btn-done:hover{background:#236040;transform:translateY(-1px)}
 .btn-done.done{background:#888;cursor:default}
-.btn-next{display:flex;align-items:center;gap:6px;background:var(--accent-light);color:var(--accent);border:1px solid #e0c87a;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.btn-next{display:flex;align-items:center;gap:6px;background:var(--accent-light);color:var(--accent);border:1px solid #e0c87a;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
 .btn-next:hover{background:#eedfa0}
 #welcome{padding:40px 0;text-align:center}
 .welcome-icon{font-size:56px;margin-bottom:16px}
 .welcome-title{font-family:'Noto Serif KR',serif;font-size:26px;font-weight:700;color:var(--accent);margin-bottom:8px}
-.welcome-sub{font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:28px}
+.welcome-sub{font-size:16px;color:var(--text2);line-height:1.7;margin-bottom:28px}
 .welcome-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
 .welcome-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:left}
-.wc-num{font-size:11px;font-weight:600;color:var(--accent);margin-bottom:6px}
-.wc-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
-.wc-desc{font-size:11.5px;color:var(--text3);line-height:1.5}
+.wc-num{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px}
+.wc-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.wc-desc{font-size:12.5px;color:var(--text3);line-height:1.5}
 .btn-start{background:linear-gradient(135deg,var(--accent),var(--accent-mid));color:#fff;border:none;border-radius:10px;padding:14px 36px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Serif KR',serif;transition:all .2s;box-shadow:0 4px 16px rgba(139,105,20,.3)}
 .btn-start:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,105,20,.4)}
 @media(max-width:680px){#layout{grid-template-columns:1fr}#sidebar{display:none}#main{padding:16px}.welcome-cards{grid-template-columns:1fr}}
+/* ── 관리자 버튼 ── */
+.btn-admin{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 13px;font-size:12.5px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;white-space:nowrap}
+.btn-admin:hover{background:var(--accent-light);border-color:#e0c87a;color:var(--accent)}
+/* ── 모달 오버레이 ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal{background:var(--surface);border-radius:14px;width:680px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.22);overflow:hidden}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-hdr-title{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--accent)}
+.modal-hdr-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.btn-modal-close{background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer;line-height:1;padding:2px 6px}
+.btn-modal-close:hover{color:var(--text)}
+.modal-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+/* 레슨 선택 드롭다운 영역 */
+.modal-select-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.modal-select-row label{font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap}
+.modal-select-row select{flex:1;min-width:180px;border:1px solid var(--border2);border-radius:8px;padding:7px 10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--surface);cursor:pointer}
+.modal-select-row select:focus{outline:none;border-color:var(--accent)}
+/* 영상 목록 */
+.vid-mgr-list{display:flex;flex-direction:column;gap:8px}
+.vid-mgr-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.vid-mgr-thumb{width:40px;height:28px;background:var(--red);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
+.vid-mgr-info{flex:1;min-width:0}
+.vid-mgr-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vid-mgr-ch{font-size:11.5px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vid-mgr-url{font-size:11px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.vid-mgr-actions{display:flex;gap:5px;flex-shrink:0}
+.btn-vid-edit,.btn-vid-del{border:none;border-radius:6px;padding:5px 10px;font-size:11.5px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-vid-edit{background:var(--accent-light);color:var(--accent);border:1px solid #e0c87a}
+.btn-vid-edit:hover{background:#eedfa0}
+.btn-vid-del{background:var(--red-bg);color:var(--red);border:1px solid #f0b8b8}
+.btn-vid-del:hover{background:#fdd}
+.vid-empty{text-align:center;padding:20px;color:var(--text3);font-size:13px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border2)}
+/* 추가 폼 */
+.add-form{background:var(--blue-bg);border:1px solid #b8d0e8;border-radius:10px;padding:14px 16px}
+.add-form-title{font-size:13px;font-weight:600;color:var(--blue);margin-bottom:12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid.full{grid-template-columns:1fr}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:12px;font-weight:500;color:var(--text2)}
+.form-field input{border:1px solid var(--border2);border-radius:7px;padding:8px 10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--surface);transition:border .15s}
+.form-field input:focus{outline:none;border-color:var(--accent)}
+.form-field input::placeholder{color:var(--text3)}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.form-actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+.btn-add-confirm{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.btn-add-confirm:hover{background:#6d5010}
+.btn-add-cancel{background:none;border:1px solid var(--border2);border-radius:8px;padding:9px 16px;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-show-add{background:var(--green-bg);color:var(--green);border:1px solid #a8d5b8;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px}
+.btn-show-add:hover{background:#cfeadc}
+.msg-saved{font-size:12px;color:var(--green);font-weight:500}
+.msg-err{font-size:12px;color:var(--red);font-weight:500}
 </style>
 </head>
 <body>
 <div id="header">
   <div class="hdr-logo">
-    <div class="hdr-icon">🎸</div>
+    <div class="hdr-icon">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 넥 -->
+        <rect x="10" y="1" width="2" height="9" rx="1" fill="#fff" opacity="0.9"/>
+        <!-- 헤드스톡 (클래식기타 슬롯형) -->
+        <rect x="8.5" y="0.5" width="5" height="3" rx="1" fill="#fff" opacity="0.9"/>
+        <rect x="9.2" y="1" width="1.2" height="2.2" rx="0.5" fill="#c49a2a"/>
+        <rect x="11.6" y="1" width="1.2" height="2.2" rx="0.5" fill="#c49a2a"/>
+        <!-- 너트 -->
+        <rect x="9.8" y="3.8" width="2.4" height="0.6" rx="0.3" fill="#fff" opacity="0.7"/>
+        <!-- 바디 (클래식기타 허리가 잘록한 8자형) -->
+        <!-- 어퍼바웃 -->
+        <ellipse cx="11" cy="13.5" rx="4.2" ry="3.2" fill="#fff" opacity="0.9"/>
+        <!-- 웨이스트 -->
+        <rect x="9.2" y="15.5" width="3.6" height="1.4" fill="#fff" opacity="0.9"/>
+        <!-- 로어바웃 (더 크게) -->
+        <ellipse cx="11" cy="18.2" rx="5" ry="3.5" fill="#fff" opacity="0.9"/>
+        <!-- 사운드홀 -->
+        <circle cx="11" cy="14.8" r="1.5" fill="#c49a2a" opacity="0.8"/>
+        <circle cx="11" cy="14.8" r="1" fill="#8b6914"/>
+        <!-- 브리지 -->
+        <rect x="8.8" y="19.5" width="4.4" height="0.9" rx="0.4" fill="#c49a2a" opacity="0.9"/>
+        <!-- 줄 (3줄만 표현) -->
+        <line x1="10.2" y1="4.4" x2="10.2" y2="19.5" stroke="#fff" stroke-width="0.3" opacity="0.5"/>
+        <line x1="11" y1="4.4" x2="11" y2="19.5" stroke="#fff" stroke-width="0.3" opacity="0.5"/>
+        <line x1="11.8" y1="4.4" x2="11.8" y2="19.5" stroke="#fff" stroke-width="0.3" opacity="0.5"/>
+      </svg>
+    </div>
     <div>
       <div class="hdr-title">교하성당 클래식기타반</div>
       <div class="hdr-sub">초급 과정 교육 시스템</div>
     </div>
   </div>
-  <div class="hdr-right"><div class="progress-pill" id="ppill">진도: 0 / 0 레슨</div></div>
+  <div class="hdr-right" style="display:flex;align-items:center;gap:10px">
+    <div class="progress-pill" id="ppill">진도: 0 / 0 레슨</div>
+    <button class="btn-admin" onclick="openAdmin()" title="유튜브 강좌 관리">⚙ 강좌 관리</button>
+  </div>
 </div>
 <div id="layout">
   <div id="sidebar"><div id="stage-list"></div></div>
   <div id="main"><div id="content"></div></div>
+</div>
+
+<!-- 유튜브 관리 모달 -->
+<div id="modal-overlay" onclick="closeAdminOutside(event)">
+  <div id="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-hdr-title">▶ 유튜브 강좌 관리</div>
+        <div class="modal-hdr-sub">레슨별 추천 영상을 추가·수정·삭제할 수 있습니다</div>
+      </div>
+      <button class="btn-modal-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
 </div>
 <script>
 const CUR=[
@@ -335,22 +431,16 @@ function renderLesson(l,s){
       </div>
 
       <div class="section-block">
-        <div class="section-label"><div class="sicon si-red">▶️</div>추천 유튜브 강좌</div>
-        <div class="video-list">
-          ${l.videos.map(v=>`
-            <div class="video-item" onclick="window.open('${v.url}','_blank')">
-              <div class="video-thumb">▶</div>
-              <div class="video-info">
-                <div class="video-title">${v.title}</div>
-                <div class="video-channel">${v.channel}</div>
-              </div>
-              <div class="video-badge">${v.dur}</div>
-            </div>`).join('')}
+        <div class="section-label"><div class="sicon si-red">▶️</div>추천 유튜브 강좌
+          <button onclick="openAdminForLesson('${l.id}')" style="margin-left:auto;background:var(--red-bg);border:1px solid #f0b8b8;border-radius:6px;padding:3px 9px;font-size:11px;color:var(--red);cursor:pointer;font-family:'Noto Sans KR',sans-serif">+ 강좌 관리</button>
+        </div>
+        <div class="video-list" id="vidlist_${l.id}">
+          ${renderVideoList(l.id, l.videos)}
         </div>
       </div>
 
       <div class="section-block">
-        <div class="section-label"><div class="sicon si-gray">🎸</div>오늘의 연습</div>
+        <div class="section-label"><div class="sicon si-gray">🎵</div>오늘의 연습</div>
         <div class="practice-box"><div class="practice-steps">
           ${l.practice.map((p,i)=>`<div class="practice-step"><div class="step-icon">${['①','②','③','④'][i]||'•'}</div><div>${p}</div></div>`).join('')}
         </div></div>
@@ -371,11 +461,240 @@ function markDone(id){
   if(cur&&cur.id===id)renderLesson(cur);
 }
 
+// ══════════════════════════════════════════════
+//  유튜브 커스텀 영상 저장소 (localStorage)
+// ══════════════════════════════════════════════
+function loadCustomVideos(){
+  try{ return JSON.parse(localStorage.getItem('kg_videos')||'{}'); }
+  catch(e){ return {}; }
+}
+function saveCustomVideos(cv){ localStorage.setItem('kg_videos',JSON.stringify(cv)); }
+
+// 영상 목록 렌더 (커스텀 우선, 없으면 기본 데이터)
+function renderVideoList(lessonId, defaultVideos){
+  const cv=loadCustomVideos();
+  const vids=cv[lessonId]||defaultVideos;
+  if(!vids||vids.length===0) return '<div class="vid-empty">등록된 강좌가 없습니다. 강좌 관리에서 추가해 주세요.</div>';
+  return vids.map(v=>`
+    <div class="video-item" onclick="window.open('${escHtml(v.url)}','_blank')">
+      <div class="video-thumb">▶</div>
+      <div class="video-info">
+        <div class="video-title">${escHtml(v.title)}</div>
+        <div class="video-channel">${escHtml(v.channel)}</div>
+      </div>
+      <div class="video-badge">${escHtml(v.dur||'')}</div>
+    </div>`).join('');
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// 현재 선택된 레슨 ID (모달에서 사용)
+let adminLessonId=null;
+let editingIdx=null; // 수정 중인 인덱스
+
+// ── 모달 열기 ──────────────────────────────
+function openAdmin(){
+  // 현재 열린 레슨이 있으면 그 레슨으로, 없으면 첫 레슨
+  const lid = cur ? cur.id : CUR[0].lessons[0].id;
+  openAdminForLesson(lid);
+}
+
+function openAdminForLesson(lid){
+  adminLessonId=lid;
+  editingIdx=null;
+  document.getElementById('modal-overlay').classList.add('open');
+  renderModal();
+}
+
+function closeAdmin(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingIdx=null;
+}
+
+function closeAdminOutside(e){
+  if(e.target===document.getElementById('modal-overlay')) closeAdmin();
+}
+
+// ── 모달 내용 렌더 ─────────────────────────
+function renderModal(){
+  const cv=loadCustomVideos();
+
+  // 레슨 선택 옵션 생성
+  const opts=CUR.map(s=>s.lessons.map(l=>`<option value="${l.id}" ${l.id===adminLessonId?'selected':''}>[${s.title}] ${l.title}</option>`).join('')).join('');
+
+  // 현재 레슨의 영상 목록
+  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
+  const vids=cv[adminLessonId]||(lesson?[...lesson.videos]:[]);
+
+  const vidItems=vids.length===0
+    ?'<div class="vid-empty">등록된 강좌가 없습니다. 아래에서 추가해 주세요.</div>'
+    :vids.map((v,i)=>`
+      <div class="vid-mgr-item">
+        <div class="vid-mgr-thumb">▶</div>
+        <div class="vid-mgr-info">
+          <div class="vid-mgr-title">${escHtml(v.title)}</div>
+          <div class="vid-mgr-ch">${escHtml(v.channel)}</div>
+          <div class="vid-mgr-url">${escHtml(v.url)}</div>
+        </div>
+        <div class="vid-mgr-actions">
+          <button class="btn-vid-edit" onclick="startEdit(${i})">수정</button>
+          <button class="btn-vid-del" onclick="deleteVideo(${i})">삭제</button>
+        </div>
+      </div>`).join('');
+
+  // 추가/수정 폼
+  let formHtml='';
+  if(editingIdx===null){
+    formHtml=`
+      <button class="btn-show-add" onclick="startAdd()">＋ 새 강좌 추가</button>`;
+  } else {
+    const isEdit=editingIdx>=0;
+    const v=isEdit?vids[editingIdx]:{title:'',channel:'',url:'',dur:''};
+    formHtml=`
+      <div class="add-form">
+        <div class="add-form-title">${isEdit?'✏ 강좌 수정':'＋ 새 강좌 추가'}</div>
+        <div class="form-grid full">
+          <div class="form-field">
+            <label>영상 제목 *</label>
+            <input id="f-title" type="text" placeholder="예: 클래식 기타 기초 강의 1편" value="${escHtml(v.title)}">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:10px">
+          <div class="form-field">
+            <label>채널명</label>
+            <input id="f-channel" type="text" placeholder="예: 기타 마스터 TV" value="${escHtml(v.channel)}">
+          </div>
+          <div class="form-field">
+            <label>재생 시간</label>
+            <input id="f-dur" type="text" placeholder="예: 12분" value="${escHtml(v.dur||'')}">
+          </div>
+        </div>
+        <div class="form-grid full" style="margin-top:10px">
+          <div class="form-field">
+            <label>유튜브 URL *</label>
+            <input id="f-url" type="url" placeholder="https://www.youtube.com/watch?v=..." value="${escHtml(v.url)}">
+            <div class="form-hint">유튜브 영상 주소를 그대로 붙여넣으세요</div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-add-confirm" onclick="saveVideo(${isEdit?editingIdx:-1})">${isEdit?'수정 저장':'추가하기'}</button>
+          <button class="btn-add-cancel" onclick="cancelEdit()">취소</button>
+          <span id="form-msg"></span>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-select-row">
+      <label>레슨 선택</label>
+      <select onchange="changeAdminLesson(this.value)">${opts}</select>
+    </div>
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:8px">
+        현재 등록된 강좌 <span style="color:var(--accent)">(${vids.length}개)</span>
+        ${cv[adminLessonId]?'<span style="font-size:11px;color:var(--green);margin-left:6px">● 직접 등록</span>':'<span style="font-size:11px;color:var(--text3);margin-left:6px">○ 기본값</span>'}
+      </div>
+      <div class="vid-mgr-list">${vidItems}</div>
+    </div>
+    ${formHtml}
+    ${cv[adminLessonId]?`<button onclick="resetToDefault('${adminLessonId}')" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;text-align:left">↩ 이 레슨을 기본값으로 초기화</button>`:''}
+  `;
+}
+
+function changeAdminLesson(lid){ adminLessonId=lid; editingIdx=null; renderModal(); }
+function startAdd(){ editingIdx=-1; renderModal(); }
+function startEdit(i){ editingIdx=i; renderModal(); }
+function cancelEdit(){ editingIdx=null; renderModal(); }
+
+function saveVideo(idx){
+  const title=document.getElementById('f-title').value.trim();
+  const url=document.getElementById('f-url').value.trim();
+  const channel=document.getElementById('f-channel').value.trim();
+  const dur=document.getElementById('f-dur').value.trim();
+  const msg=document.getElementById('form-msg');
+
+  if(!title){ msg.className='msg-err'; msg.textContent='제목을 입력해 주세요.'; return; }
+  if(!url){ msg.className='msg-err'; msg.textContent='URL을 입력해 주세요.'; return; }
+  if(!url.startsWith('http')){ msg.className='msg-err'; msg.textContent='올바른 URL을 입력해 주세요.'; return; }
+
+  const cv=loadCustomVideos();
+  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
+  if(!cv[adminLessonId]) cv[adminLessonId]=[...(lesson?lesson.videos:[])];
+
+  const newV={title,channel,url,dur};
+  if(idx>=0) cv[adminLessonId][idx]=newV;
+  else cv[adminLessonId].push(newV);
+
+  saveCustomVideos(cv);
+  editingIdx=null;
+  renderModal();
+  refreshVideoSection();
+}
+
+function deleteVideo(idx){
+  if(!confirm('이 강좌를 삭제할까요?')) return;
+  const cv=loadCustomVideos();
+  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===adminLessonId);
+  if(!cv[adminLessonId]) cv[adminLessonId]=[...(lesson?lesson.videos:[])];
+  cv[adminLessonId].splice(idx,1);
+  saveCustomVideos(cv);
+  renderModal();
+  refreshVideoSection();
+}
+
+function resetToDefault(lid){
+  if(!confirm('이 레슨의 강좌 목록을 기본값으로 초기화할까요?')) return;
+  const cv=loadCustomVideos();
+  delete cv[lid];
+  saveCustomVideos(cv);
+  renderModal();
+  refreshVideoSection();
+}
+
+// 모달 저장 후 레슨 화면의 영상 목록만 새로고침
+function refreshVideoSection(){
+  if(!cur) return;
+  const el=document.getElementById('vidlist_'+cur.id);
+  if(!el) return;
+  const lesson=CUR.flatMap(s=>s.lessons).find(l=>l.id===cur.id);
+  if(lesson) el.innerHTML=renderVideoList(cur.id, lesson.videos);
+}
+
 // 환영 화면
 function renderWelcome(){
   document.getElementById('content').innerHTML=`
   <div id="welcome">
-    <div class="welcome-icon">🎸</div>
+    <div class="welcome-icon"><svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 넥 -->
+  <rect x="29" y="3" width="6" height="26" rx="3" fill="#c49a2a"/>
+  <!-- 헤드스톡 슬롯형 -->
+  <rect x="24" y="2" width="16" height="9" rx="3" fill="#8b6914"/>
+  <rect x="26" y="3.5" width="4" height="6" rx="2" fill="#f5edd8"/>
+  <rect x="34" y="3.5" width="4" height="6" rx="2" fill="#f5edd8"/>
+  <!-- 너트 -->
+  <rect x="28" y="10.5" width="8" height="2" rx="1" fill="#e8e0d0"/>
+  <!-- 어퍼바웃 -->
+  <ellipse cx="32" cy="38" rx="12" ry="9" fill="#c49a2a"/>
+  <!-- 웨이스트 -->
+  <rect x="27" y="44" width="10" height="5" fill="#c49a2a"/>
+  <!-- 로어바웃 -->
+  <ellipse cx="32" cy="52" rx="14.5" ry="10" fill="#c49a2a"/>
+  <!-- 바디 테두리 -->
+  <ellipse cx="32" cy="38" rx="12" ry="9" fill="none" stroke="#8b6914" stroke-width="1.2"/>
+  <ellipse cx="32" cy="52" rx="14.5" ry="10" fill="none" stroke="#8b6914" stroke-width="1.2"/>
+  <!-- 사운드홀 -->
+  <circle cx="32" cy="43" r="5" fill="#8b6914"/>
+  <circle cx="32" cy="43" r="3.5" fill="#5a3d0a"/>
+  <circle cx="32" cy="43" r="1.5" fill="#8b6914" opacity="0.5"/>
+  <!-- 브리지 -->
+  <rect x="25" y="57" width="14" height="3" rx="1.5" fill="#8b6914"/>
+  <!-- 줄 (6줄) -->
+  <line x1="29.5" y1="12.5" x2="29.5" y2="57" stroke="#e8e0d0" stroke-width="0.6" opacity="0.7"/>
+  <line x1="31" y1="12.5" x2="31" y2="57" stroke="#e8e0d0" stroke-width="0.6" opacity="0.7"/>
+  <line x1="32" y1="12.5" x2="32" y2="57" stroke="#e8e0d0" stroke-width="0.6" opacity="0.7"/>
+  <line x1="33" y1="12.5" x2="33" y2="57" stroke="#e8e0d0" stroke-width="0.6" opacity="0.7"/>
+  <line x1="34.5" y1="12.5" x2="34.5" y2="57" stroke="#e8e0d0" stroke-width="0.6" opacity="0.7"/>
+</svg></div>
     <div class="welcome-title">교하성당 클래식기타반</div>
     <p class="welcome-sub">왼쪽 메뉴에서 단계를 선택해 레슨을 시작하세요.<br>기초부터 차근차근, 첫 번째 곡 연주까지 함께해요.</p>
     <div class="welcome-cards">
