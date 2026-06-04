@@ -103,6 +103,45 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 #img-zoom-overlay img{max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 .msg-saved{font-size:13px;color:var(--green);font-weight:500}
 .msg-err{font-size:13px;color:var(--red);font-weight:500}
+/* ── 강좌 관리 ── */
+.btn-admin{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 14px;font-size:13.5px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;white-space:nowrap}
+.btn-admin:hover{background:var(--accent-light);border-color:#e0c87a;color:var(--accent)}
+.btn-save-html{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.btn-save-html:hover{background:#6d5010}
+.mgr-lesson-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.mgr-lesson-head{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.mgr-lesson-head:hover{background:var(--accent-light)}
+.mgr-lesson-head.open{background:var(--accent-light)}
+.mgr-lesson-badge{font-size:11px;font-weight:600;color:var(--accent);background:rgba(139,105,20,.1);padding:2px 8px;border-radius:10px;flex-shrink:0}
+.mgr-lesson-title{font-size:14px;font-weight:500;color:var(--text);flex:1}
+.mgr-lesson-cnt{font-size:12px;color:var(--text3)}
+.mgr-lesson-body{display:none;border-top:1px solid var(--border);padding:12px 14px;flex-direction:column;gap:8px}
+.mgr-lesson-body.open{display:flex}
+.mgr-vid-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.mgr-vid-info{flex:1;min-width:0}
+.mgr-vid-title{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mgr-vid-sub{font-size:12px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mgr-vid-btns{display:flex;gap:5px;flex-shrink:0}
+.btn-vedit{background:var(--accent-light);color:var(--accent);border:1px solid #e0c87a;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-vedit:hover{background:#eedfa0}
+.btn-vdel{background:var(--red-bg);color:var(--red);border:1px solid #f0b8b8;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-vdel:hover{background:#fdd}
+.mgr-form{background:var(--blue-bg);border:1px solid #b8d0e8;border-radius:8px;padding:12px 14px;margin-top:4px}
+.mgr-form-title{font-size:13px;font-weight:600;color:var(--blue);margin-bottom:10px}
+.mgr-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mgr-form-full{grid-column:1/-1}
+.mgr-field{display:flex;flex-direction:column;gap:3px}
+.mgr-field label{font-size:12px;font-weight:500;color:var(--text2)}
+.mgr-field input{border:1px solid var(--border2);border-radius:7px;padding:8px 10px;font-size:13.5px;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--surface);transition:border .15s}
+.mgr-field input:focus{outline:none;border-color:var(--accent)}
+.mgr-field input::placeholder{color:var(--text3)}
+.mgr-form-actions{display:flex;gap:8px;margin-top:10px;align-items:center}
+.btn-mok{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-mok:hover{background:#6d5010}
+.btn-mcancel{background:none;border:1px solid var(--border2);border-radius:7px;padding:8px 14px;font-size:13.5px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-madd{background:var(--green-bg);color:var(--green);border:1px solid #a8d5b8;border-radius:7px;padding:8px 14px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.btn-madd:hover{background:#cfeadc}
+.vid-empty{text-align:center;padding:16px;color:var(--text3);font-size:13.5px;background:var(--surface2);border-radius:7px;border:1px dashed var(--border2)}
 </style>
 </head>
 <body>
@@ -143,6 +182,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   </div>
   <div class="hdr-right" style="display:flex;align-items:center;gap:10px">
     <div class="progress-pill" id="ppill">진도: 0 / 0 레슨</div>
+    <button class="btn-admin" onclick="openAdmin()">⚙ 강좌 관리</button>
   </div>
 </div>
 <div id="layout">
@@ -150,6 +190,23 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   <div id="main"><div id="content"></div></div>
 </div>
 
+<!-- 강좌 관리 모달 -->
+<div id="mgr-overlay" onclick="closeMgrOutside(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
+  <div id="mgr-modal" style="background:var(--surface);border-radius:14px;width:680px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.22);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div>
+        <div style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--accent)">⚙ 강좌 관리</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:2px">레슨별 유튜브 강좌를 추가·수정·삭제합니다</div>
+      </div>
+      <button onclick="closeMgr()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:2px 6px;line-height:1">✕</button>
+    </div>
+    <div id="mgr-body" style="flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px"></div>
+    <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="font-size:13px;color:var(--text3)">수정 후 <b style="color:var(--accent)">HTML 저장</b> 버튼으로 파일을 다운로드해서 배포하세요</div>
+      <button class="btn-save-html" onclick="saveHtml()">⬇ HTML 저장 (배포용)</button>
+    </div>
+  </div>
+</div>
 <!-- 이미지 확대 오버레이 -->
 <div id="img-zoom-overlay" onclick="closeZoom()"><img id="img-zoom-img" src="" alt="악보 확대"></div>
 <script>
@@ -555,6 +612,168 @@ function renderVideoList(lessonId, videos){
       </div>
       <div class="video-badge">${escHtml(v.dur||'')}</div>
     </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  강좌 관리 — CUR 직접 수정 + HTML 저장
+// ══════════════════════════════════════════════
+let mgrOpenLesson = null; // 현재 열린 레슨 ID
+let mgrEditIdx    = null; // 수정 중 인덱스 (-1=신규)
+
+function openAdmin(){
+  mgrOpenLesson = cur ? cur.id : null;
+  mgrEditIdx = null;
+  document.getElementById('mgr-overlay').style.display='flex';
+  renderMgr();
+}
+function closeMgr(){
+  document.getElementById('mgr-overlay').style.display='none';
+  mgrEditIdx=null;
+}
+function closeMgrOutside(e){
+  if(e.target===document.getElementById('mgr-overlay')) closeMgr();
+}
+
+function toggleMgrLesson(lid){
+  mgrOpenLesson = (mgrOpenLesson===lid) ? null : lid;
+  mgrEditIdx = null;
+  renderMgr();
+}
+
+function renderMgr(){
+  const body = document.getElementById('mgr-body');
+  body.innerHTML = CUR.map(stage => `
+    <div style="margin-bottom:4px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;padding-left:2px">${stage.title}</div>
+      ${stage.lessons.map(lesson => {
+        const isOpen = mgrOpenLesson === lesson.id;
+        const vids = lesson.videos || [];
+        return `
+        <div class="mgr-lesson-block" style="margin-bottom:6px">
+          <div class="mgr-lesson-head ${isOpen?'open':''}" onclick="toggleMgrLesson('${lesson.id}')">
+            <span class="mgr-lesson-badge">${lesson.id}</span>
+            <span class="mgr-lesson-title">${lesson.title}</span>
+            <span class="mgr-lesson-cnt">강좌 ${vids.length}개</span>
+            <span style="font-size:12px;color:var(--text3);margin-left:4px">${isOpen?'▲':'▼'}</span>
+          </div>
+          <div class="mgr-lesson-body ${isOpen?'open':''}">
+            ${vids.length===0
+              ? '<div class="vid-empty">등록된 강좌가 없습니다</div>'
+              : vids.map((v,i)=>`
+                <div class="mgr-vid-row">
+                  <div class="mgr-vid-info">
+                    <div class="mgr-vid-title">${escHtml(v.title)}</div>
+                    <div class="mgr-vid-sub">${escHtml(v.channel)} · ${escHtml(v.dur||'')} · <span style="color:var(--blue)">${escHtml(v.url)}</span></div>
+                  </div>
+                  <div class="mgr-vid-btns">
+                    <button class="btn-vedit" onclick="startMgrEdit('${lesson.id}',${i})">수정</button>
+                    <button class="btn-vdel"  onclick="mgrDelVideo('${lesson.id}',${i})">삭제</button>
+                  </div>
+                </div>`).join('')
+            }
+            ${isOpen && mgrEditIdx !== null ? renderMgrForm(lesson.id, vids) : ''}
+            ${isOpen && mgrEditIdx === null ? `<button class="btn-madd" onclick="startMgrAdd('${lesson.id}')">＋ 강좌 추가</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function renderMgrForm(lid, vids){
+  const isNew = (mgrEditIdx === -1);
+  const v = isNew ? {title:'',channel:'',url:'',dur:''} : (vids[mgrEditIdx]||{});
+  return `
+    <div class="mgr-form">
+      <div class="mgr-form-title">${isNew ? '＋ 새 강좌 추가' : '✏ 강좌 수정'}</div>
+      <div class="mgr-form-grid">
+        <div class="mgr-field mgr-form-full">
+          <label>영상 제목 *</label>
+          <input id="mf-title" type="text" placeholder="예: 클래식기타 기초 강의" value="${escHtml(v.title)}">
+        </div>
+        <div class="mgr-field">
+          <label>채널명</label>
+          <input id="mf-ch" type="text" placeholder="예: 정샘 기타" value="${escHtml(v.channel)}">
+        </div>
+        <div class="mgr-field">
+          <label>재생 시간</label>
+          <input id="mf-dur" type="text" placeholder="예: 12분" value="${escHtml(v.dur||'')}">
+        </div>
+        <div class="mgr-field mgr-form-full">
+          <label>유튜브 URL *</label>
+          <input id="mf-url" type="url" placeholder="https://www.youtube.com/watch?v=..." value="${escHtml(v.url)}">
+        </div>
+      </div>
+      <div class="mgr-form-actions">
+        <button class="btn-mok"     onclick="saveMgrVideo('${lid}')">저장</button>
+        <button class="btn-mcancel" onclick="cancelMgrEdit()">취소</button>
+        <span id="mf-msg" style="font-size:13px;color:var(--red)"></span>
+      </div>
+    </div>`;
+}
+
+function startMgrAdd(lid){
+  mgrOpenLesson = lid;
+  mgrEditIdx = -1;
+  renderMgr();
+}
+function startMgrEdit(lid, idx){
+  mgrOpenLesson = lid;
+  mgrEditIdx = idx;
+  renderMgr();
+}
+function cancelMgrEdit(){
+  mgrEditIdx = null;
+  renderMgr();
+}
+
+function saveMgrVideo(lid){
+  const title = document.getElementById('mf-title')?.value.trim()||'';
+  const url   = document.getElementById('mf-url')?.value.trim()||'';
+  const ch    = document.getElementById('mf-ch')?.value.trim()||'';
+  const dur   = document.getElementById('mf-dur')?.value.trim()||'';
+  const msg   = document.getElementById('mf-msg');
+  if(!title){ if(msg) msg.textContent='제목을 입력해 주세요.'; return; }
+  if(!url||!url.startsWith('http')){ if(msg) msg.textContent='올바른 URL을 입력해 주세요.'; return; }
+
+  // CUR 데이터 직접 수정
+  const lesson = CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
+  if(!lesson) return;
+  const newV = {title, channel:ch, url, dur};
+  if(mgrEditIdx===-1){
+    lesson.videos.push(newV);
+  } else {
+    lesson.videos[mgrEditIdx] = newV;
+  }
+  mgrEditIdx = null;
+
+  // 레슨 화면 영상 목록 새로고침
+  const el = document.getElementById('vidlist_'+lid);
+  if(el) el.innerHTML = renderVideoList(lid, lesson.videos);
+
+  renderMgr();
+}
+
+function mgrDelVideo(lid, idx){
+  if(!confirm('이 강좌를 삭제할까요?')) return;
+  const lesson = CUR.flatMap(s=>s.lessons).find(l=>l.id===lid);
+  if(!lesson) return;
+  lesson.videos.splice(idx,1);
+  mgrEditIdx = null;
+  const el = document.getElementById('vidlist_'+lid);
+  if(el) el.innerHTML = renderVideoList(lid, lesson.videos);
+  renderMgr();
+}
+
+// ── HTML 소스 저장 (배포용 파일 다운로드) ──────
+function saveHtml(){
+  // CUR 데이터를 현재 상태로 직렬화해서 소스에 반영
+  const src = document.documentElement.outerHTML;
+  const blob = new Blob([src], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'guitar_app.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 
