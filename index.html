@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>교하성당 클래식기타반 - 좌측 메뉴를 클릭하세요</title>
+<title>교하성당 클래식기타반</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f8f6f1;--surface:#fff;--surface2:#f2efe8;--border:#e0dbd0;--border2:#ccc7b8;--accent:#8b6914;--accent-light:#f5edd8;--accent-mid:#c49a2a;--text:#1a1810;--text2:#5a5448;--text3:#9a9080;--green:#2d6a4f;--green-bg:#e8f5ee;--blue:#1a4a7a;--blue-bg:#e8f0f8;--red:#8b2020;--red-bg:#faeaea}
@@ -192,21 +192,60 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
 <!-- 강좌 관리 모달 -->
 <div id="mgr-overlay" onclick="closeMgrOutside(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
-  <div id="mgr-modal" style="background:var(--surface);border-radius:14px;width:680px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.22);overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0">
+  <div id="mgr-modal" style="background:var(--surface);border-radius:14px;width:720px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.22);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--accent)">⚙ 강좌 관리</div>
-        <div style="font-size:13px;color:var(--text3);margin-top:2px">레슨별 유튜브 강좌를 추가·수정·삭제합니다</div>
+        <div style="font-size:12.5px;color:var(--text3);margin-top:2px">단계·레슨 추가/삭제 및 유튜브 강좌 관리</div>
       </div>
-      <button onclick="closeMgr()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:2px 6px;line-height:1">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="background:var(--blue-bg);color:var(--blue);border:1px solid #b8d0e8;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap">
+          ⬆ 파일 불러오기
+          <input type="file" accept=".html" style="display:none" onchange="importHtml(event)">
+        </label>
+        <button onclick="closeMgr()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:2px 6px;line-height:1">✕</button>
+      </div>
     </div>
-    <div id="mgr-body" style="flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px"></div>
-    <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
-      <div style="font-size:13px;color:var(--text3)">수정 후 <b style="color:var(--accent)">소스 내보내기</b>로 파일 받아서 회원들에게 배포</div>
-      <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
+
+    <!-- Gist 연동 상태 바 -->
+    <div id="gist-bar" style="padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0"></div>
+
+    <div id="mgr-body" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:13px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:wrap">
+      <div style="font-size:12.5px;color:var(--text3)">Gist 연동 시 회원 화면에 자동 반영 · 미연동 시 소스 내보내기로 배포</div>
+      <div style="display:flex;gap:8px">
+        <button id="gist-save-btn" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="gistSave()">☁ Gist에 저장</button>
+        <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Gist 설정(토큰) 모달 -->
+<div id="gist-setup-overlay" onclick="if(event.target===this)closeGistSetup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:14px;width:460px;max-width:92vw;padding:22px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:6px">☁ Gist 연동 설정</div>
+    <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:14px">
+      이 기타반 앱 전용 GitHub Personal Access Token을 입력하세요.<br>
+      <a href="https://github.com/settings/tokens/new?scopes=gist&description=교하성당기타반앱" target="_blank" style="color:var(--blue)">여기서 새 토큰 발급</a>
+      (scope에서 <b>gist</b>만 체크하면 됩니다)
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input id="gist-token-inp" type="password" placeholder="ghp_로 시작하는 토큰 붙여넣기"
+        style="border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:monospace;color:var(--text);background:var(--surface2)">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="saveGistToken()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif">저장하고 연결</button>
+      <button onclick="closeGistSetup()" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:14px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+    </div>
+    <div id="gist-setup-err" style="font-size:12.5px;color:var(--red);margin-top:8px"></div>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:12px;line-height:1.5">
+      ※ 토큰은 이 브라우저에만 저장되며 회원들에게 노출되지 않습니다.<br>
+      ※ 처음 저장 시 새 Gist가 자동 생성됩니다.
+    </div>
+  </div>
+</div>
+
 <!-- 이미지 확대 오버레이 -->
 <div id="img-zoom-overlay" onclick="closeZoom()"><img id="img-zoom-img" src="" alt="악보 확대"></div>
 <script>
@@ -627,6 +666,7 @@ function openAdmin(){
   mgrEditIdx = null;
   document.getElementById('mgr-overlay').style.display='flex';
   renderMgr();
+  renderGistBar();
 }
 function closeMgr(){
   document.getElementById('mgr-overlay').style.display='none';
@@ -637,48 +677,197 @@ function closeMgrOutside(e){
 }
 
 function toggleMgrLesson(lid){
-  mgrOpenLesson = (mgrOpenLesson===lid) ? null : lid;
-  mgrEditIdx = null;
+  mgrOpenLesson=(mgrOpenLesson===lid)?null:lid;
+  mgrEditIdx=null;
   renderMgr();
 }
 
 function renderMgr(){
-  const body = document.getElementById('mgr-body');
-  body.innerHTML = CUR.map(stage => `
-    <div style="margin-bottom:4px">
-      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;padding-left:2px">${stage.title}</div>
-      ${stage.lessons.map(lesson => {
-        const isOpen = mgrOpenLesson === lesson.id;
-        const vids = lesson.videos || [];
-        return `
-        <div class="mgr-lesson-block" style="margin-bottom:6px">
-          <div class="mgr-lesson-head ${isOpen?'open':''}" onclick="toggleMgrLesson('${lesson.id}')">
-            <span class="mgr-lesson-badge">${lesson.id}</span>
-            <span class="mgr-lesson-title">${lesson.title}</span>
-            <span class="mgr-lesson-cnt">강좌 ${vids.length}개</span>
-            <span style="font-size:12px;color:var(--text3);margin-left:4px">${isOpen?'▲':'▼'}</span>
-          </div>
-          <div class="mgr-lesson-body ${isOpen?'open':''}">
-            ${vids.length===0
-              ? '<div class="vid-empty">등록된 강좌가 없습니다</div>'
-              : vids.map((v,i)=>`
-                <div class="mgr-vid-row">
-                  <div class="mgr-vid-info">
-                    <div class="mgr-vid-title">${escHtml(v.title)}</div>
-                    <div class="mgr-vid-sub">${escHtml(v.channel)} · ${escHtml(v.dur||'')} · <span style="color:var(--blue)">${escHtml(v.url)}</span></div>
-                  </div>
-                  <div class="mgr-vid-btns">
-                    <button class="btn-vedit" onclick="startMgrEdit('${lesson.id}',${i})">수정</button>
-                    <button class="btn-vdel"  onclick="mgrDelVideo('${lesson.id}',${i})">삭제</button>
-                  </div>
-                </div>`).join('')
-            }
-            ${isOpen && mgrEditIdx !== null ? renderMgrForm(lesson.id, vids) : ''}
-            ${isOpen && mgrEditIdx === null ? `<button class="btn-madd" onclick="startMgrAdd('${lesson.id}')">＋ 강좌 추가</button>` : ''}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`).join('');
+  const body=document.getElementById('mgr-body');
+
+  // 단계 추가 폼
+  const stageAddHtml=`
+    <div id="stage-add-form" style="display:none;background:var(--accent-light);border:1px solid #e0c87a;border-radius:10px;padding:14px 16px;margin-bottom:4px">
+      <div style="font-size:14px;font-weight:600;color:var(--accent);margin-bottom:10px">＋ 새 단계 추가</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="mgr-field"><label>단계 제목 *</label><input id="sa-title" placeholder="예: 심화 스케일" style="width:100%"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="mgr-field"><label>첫 번째 레슨 제목 *</label><input id="sa-lesson" placeholder="예: 레슨 1"></div>
+          <div class="mgr-field"><label>단계 ID (영문, 예: s8)</label><input id="sa-id" placeholder="자동생성 가능"></div>
+        </div>
+      </div>
+      <div class="mgr-form-actions" style="margin-top:10px">
+        <button class="btn-mok" onclick="addStage()">추가</button>
+        <button class="btn-mcancel" onclick="document.getElementById('stage-add-form').style.display='none'">취소</button>
+        <span id="sa-err" style="font-size:13px;color:var(--red)"></span>
+      </div>
+    </div>`;
+
+  body.innerHTML = stageAddHtml + CUR.map((stage,si)=>{
+    return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <!-- 단계 헤더 -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-light);border-bottom:1px solid #e8d88a">
+        <div style="width:28px;height:28px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${si+1}</div>
+        <div style="flex:1;font-size:15px;font-weight:600;color:var(--accent)">${escHtml(stage.title)}</div>
+        <button class="btn-mcancel" style="font-size:12px;padding:5px 10px;color:var(--text3)" onclick="addLesson('${stage.id}')">＋ 레슨 추가</button>
+        <button class="btn-vdel" style="font-size:12px;padding:5px 10px" onclick="delStage('${stage.id}')">단계 삭제</button>
+      </div>
+      <!-- 레슨 목록 -->
+      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        ${stage.lessons.map((lesson,li)=>{
+          const isOpen=mgrOpenLesson===lesson.id;
+          const vids=lesson.videos||[];
+          return `
+          <div class="mgr-lesson-block">
+            <div class="mgr-lesson-head${isOpen?' open':''}" onclick="toggleMgrLesson('${lesson.id}')">
+              <span class="mgr-lesson-badge">${lesson.id}</span>
+              <span class="mgr-lesson-title">${escHtml(lesson.title)}</span>
+              <span class="mgr-lesson-cnt">강좌 ${vids.length}개</span>
+              <button class="btn-vdel" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="event.stopPropagation();delLesson('${stage.id}','${lesson.id}')">레슨 삭제</button>
+              <span style="font-size:12px;color:var(--text3);margin-left:4px">${isOpen?'▲':'▼'}</span>
+            </div>
+            <div class="mgr-lesson-body${isOpen?' open':''}">
+              ${vids.length===0
+                ?'<div class="vid-empty">등록된 강좌가 없습니다</div>'
+                :vids.map((v,i)=>`
+                  <div class="mgr-vid-row">
+                    <div class="mgr-vid-info">
+                      <div class="mgr-vid-title">${escHtml(v.title)}</div>
+                      <div class="mgr-vid-sub">${escHtml(v.channel||'')}${v.dur?' · '+escHtml(v.dur):''} · <span style="color:var(--blue)">${escHtml(v.url)}</span></div>
+                    </div>
+                    <div class="mgr-vid-btns">
+                      <button class="btn-vedit" onclick="startMgrEdit('${lesson.id}',${i})">수정</button>
+                      <button class="btn-vdel"  onclick="mgrDelVideo('${lesson.id}',${i})">삭제</button>
+                    </div>
+                  </div>`).join('')
+              }
+              ${isOpen && mgrEditIdx!==null ? renderMgrForm(lesson.id,vids) : ''}
+              ${isOpen && mgrEditIdx===null ? `<button class="btn-madd" onclick="startMgrAdd('${lesson.id}')">＋ 강좌 추가</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('') + `
+  <button class="btn-madd" style="width:100%;justify-content:center;padding:12px" onclick="document.getElementById('stage-add-form').style.display='block';document.getElementById('stage-add-form').scrollIntoView({behavior:'smooth'})">
+    ＋ 새 단계 추가
+  </button>`;
+}
+
+// ── 단계 추가/삭제 ──────────────────────────
+function addStage(){
+  const title=document.getElementById('sa-title')?.value.trim()||'';
+  const lesson=document.getElementById('sa-lesson')?.value.trim()||'';
+  let sid=document.getElementById('sa-id')?.value.trim()||'';
+  const err=document.getElementById('sa-err');
+  if(!title){if(err)err.textContent='단계 제목을 입력해 주세요.';return;}
+  if(!lesson){if(err)err.textContent='첫 번째 레슨 제목을 입력해 주세요.';return;}
+  if(!sid) sid='s'+(CUR.length+1);
+  if(CUR.find(s=>s.id===sid)){if(err)err.textContent='이미 있는 ID입니다. 다른 ID를 입력해 주세요.';return;}
+  const newLessonId=sid+'l1';
+  CUR.push({
+    id:sid,
+    title,
+    lessons:[{
+      id:newLessonId,
+      title:lesson,
+      desc:'',
+      explain:'',
+      points:[],
+      score:null,
+      scoreCaption:'',
+      videos:[],
+      practice:[],
+      _si:CUR.length,
+      _li:0,
+      _stageTitle:title
+    }]
+  });
+  // 인덱스 재부착
+  CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+  document.getElementById('stage-add-form').style.display='none';
+  renderMgr();
+  renderSidebar();
+}
+
+function delStage(sid){
+  const stage=CUR.find(s=>s.id===sid);
+  if(!stage)return;
+  if(!confirm(`"${stage.title}" 단계 전체를 삭제할까요?\n포함된 레슨 ${stage.lessons.length}개도 모두 삭제됩니다.`))return;
+  const idx=CUR.findIndex(s=>s.id===sid);
+  CUR.splice(idx,1);
+  CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+  if(mgrOpenLesson && stage.lessons.some(l=>l.id===mgrOpenLesson)) mgrOpenLesson=null;
+  renderMgr();
+  renderSidebar();
+}
+
+// ── 레슨 추가/삭제 ──────────────────────────
+function addLesson(sid){
+  const title=prompt('새 레슨 제목을 입력하세요:','');
+  if(!title||!title.trim())return;
+  const stage=CUR.find(s=>s.id===sid);
+  if(!stage)return;
+  const newId=sid+'l'+(stage.lessons.length+1);
+  stage.lessons.push({
+    id:newId,title:title.trim(),desc:'',explain:'',
+    points:[],score:null,scoreCaption:'',videos:[],practice:[],
+    _si:CUR.indexOf(stage),_li:stage.lessons.length,_stageTitle:stage.title
+  });
+  CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+  mgrOpenLesson=newId;
+  renderMgr();
+  renderSidebar();
+}
+
+function delLesson(sid,lid){
+  const stage=CUR.find(s=>s.id===sid);
+  if(!stage)return;
+  const lesson=stage.lessons.find(l=>l.id===lid);
+  if(!lesson)return;
+  if(stage.lessons.length===1){alert('단계에 레슨이 1개만 있어 삭제할 수 없습니다.\n단계 삭제를 사용해 주세요.');return;}
+  if(!confirm(`"${lesson.title}" 레슨을 삭제할까요?`))return;
+  stage.lessons=stage.lessons.filter(l=>l.id!==lid);
+  CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+  if(mgrOpenLesson===lid) mgrOpenLesson=null;
+  renderMgr();
+  renderSidebar();
+}
+
+// ── 파일 불러오기 ──────────────────────────
+function importHtml(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const src=ev.target.result;
+    // 마커 사이 CUR 블록 추출
+    const startM='/*%%CUR_START%%*/';
+    const endM='/*%%CUR_END%%*/';
+    const si=src.indexOf(startM);
+    const ei=src.indexOf(endM);
+    if(si===-1||ei===-1){alert('이 파일은 불러올 수 없습니다.\n교하성당 클래식기타반 앱 파일인지 확인해 주세요.');return;}
+    const block=src.slice(si+startM.length, ei);
+    // const CUR= ... 제거하고 배열만 추출
+    const arrText=block.replace(/^\s*const\s+CUR\s*=\s*/,'').replace(/\s*;\s*$/,'').trim();
+    try{
+      // Function으로 안전하게 평가
+      const imported=new Function('return '+arrText)();
+      // CUR 배열 교체
+      CUR.length=0;
+      imported.forEach(s=>CUR.push(s));
+      CUR.forEach((s,si2)=>s.lessons.forEach((l,li)=>{l._si=si2;l._li=li;l._stageTitle=s.title;}));
+      mgrOpenLesson=null; mgrEditIdx=null;
+      renderMgr();
+      renderSidebar();
+      alert('✓ 파일을 불러왔습니다!');
+    }catch(err){
+      alert('파일 파싱에 실패했습니다: '+err.message);
+    }
+  };
+  reader.readAsText(file,'utf-8');
+  e.target.value=''; // 같은 파일 재선택 허용
 }
 
 function renderMgrForm(lid, vids){
@@ -802,6 +991,162 @@ function exportHtml(){
   alert('✓ 파일이 다운로드됐습니다!\n수정된 guitar_app.html을 회원들에게 배포하세요.');
 }
 
+// ══════════════════════════════════════════════
+//  Gist 연동 — 토큰 저장 + Gist 생성/업데이트 + 자동 불러오기
+// ══════════════════════════════════════════════
+const GIST_DESC = '교하성당 클래식기타반 - 커리큘럼 데이터 (자동 생성, 직접 수정 금지)';
+const GIST_FILENAME = 'guitar_curriculum.json';
+
+let gistToken = localStorage.getItem('kg_gist_token') || '';
+let gistId    = localStorage.getItem('kg_gist_id') || '';
+let gistBusy  = false;
+let gistMsg   = '';
+
+function openGistSetup(){
+  document.getElementById('gist-setup-err').textContent='';
+  document.getElementById('gist-token-inp').value = gistToken;
+  document.getElementById('gist-setup-overlay').style.display='flex';
+}
+function closeGistSetup(){
+  document.getElementById('gist-setup-overlay').style.display='none';
+}
+
+async function saveGistToken(){
+  const t = document.getElementById('gist-token-inp').value.trim();
+  const err = document.getElementById('gist-setup-err');
+  if(!t){ err.textContent='토큰을 입력해 주세요.'; return; }
+  err.textContent='확인 중...';
+  // 토큰 유효성 간단 확인
+  try{
+    const res = await fetch('https://api.github.com/user', {
+      headers:{ 'Authorization':'token '+t, 'Accept':'application/vnd.github+json' }
+    });
+    if(!res.ok) throw new Error('토큰이 유효하지 않습니다 ('+res.status+')');
+  }catch(e){
+    err.textContent = '토큰 확인 실패: '+e.message;
+    return;
+  }
+  gistToken = t;
+  localStorage.setItem('kg_gist_token', gistToken);
+  closeGistSetup();
+  renderGistBar();
+  // 토큰만 저장하고 바로 첫 저장 실행
+  gistSave();
+}
+
+function disconnectGist(){
+  if(!confirm('Gist 연동을 해제할까요? (Gist 자체는 삭제되지 않습니다)')) return;
+  gistToken=''; gistId='';
+  localStorage.removeItem('kg_gist_token');
+  localStorage.removeItem('kg_gist_id');
+  renderGistBar();
+}
+
+function renderGistBar(){
+  const bar = document.getElementById('gist-bar');
+  if(!bar) return;
+  if(!gistToken){
+    bar.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-size:13px;color:var(--text2)">☁ Gist 연동을 설정하면 저장 즉시 모든 회원 화면에 자동 반영됩니다</div>
+        <button onclick="openGistSetup()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif">Gist 연동 설정</button>
+      </div>`;
+  } else {
+    bar.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-size:13px;color:var(--green);font-weight:500">
+          ✓ Gist 연동됨 ${gistId?`<span style="color:var(--text3);font-weight:400;font-size:12px">(ID: ${gistId.slice(0,8)}...)</span>`:'<span style="color:var(--text3);font-weight:400;font-size:12px">(아직 저장 안 함)</span>'}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${gistId?`<a href="https://gist.github.com/${gistId}" target="_blank" style="font-size:12.5px;color:var(--blue);text-decoration:none">원본 보기 ↗</a>`:''}
+          <button onclick="disconnectGist()" style="background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">연결 해제</button>
+        </div>
+      </div>
+      ${gistMsg?`<div style="font-size:12.5px;color:${gistMsg.startsWith('✓')?'var(--green)':'var(--red)'};margin-top:6px">${gistMsg}</div>`:''}`;
+  }
+}
+
+// CUR 데이터를 JSON으로 직렬화 (내부함수 재사용 위해 videos/explain 등 그대로)
+function curToJson(){
+  return JSON.stringify(CUR.map(s=>({
+    id:s.id, title:s.title,
+    lessons:s.lessons.map(l=>({
+      id:l.id, title:l.title, desc:l.desc, explain:l.explain,
+      points:l.points, score:l.score, scoreCaption:l.scoreCaption,
+      videos:l.videos, practice:l.practice
+    }))
+  })), null, 2);
+}
+
+async function gistSave(){
+  if(!gistToken){ openGistSetup(); return; }
+  if(gistBusy) return;
+  gistBusy = true;
+  const btn = document.getElementById('gist-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='저장 중...'; }
+  gistMsg = '';
+  try{
+    const content = curToJson();
+    const body = {
+      description: GIST_DESC,
+      public: false,
+      files: { [GIST_FILENAME]: { content } }
+    };
+    let res;
+    if(gistId){
+      res = await fetch('https://api.github.com/gists/'+gistId, {
+        method:'PATCH',
+        headers:{ 'Authorization':'token '+gistToken, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      res = await fetch('https://api.github.com/gists', {
+        method:'POST',
+        headers:{ 'Authorization':'token '+gistToken, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+    if(!res.ok){
+      const errBody = await res.text();
+      throw new Error('저장 실패 ('+res.status+')');
+    }
+    const data = await res.json();
+    gistId = data.id;
+    localStorage.setItem('kg_gist_id', gistId);
+    gistMsg = '✓ 저장 완료! 회원들 화면에도 자동 반영됩니다.';
+  } catch(e){
+    gistMsg = '✗ '+e.message;
+  } finally {
+    gistBusy = false;
+    if(btn){ btn.disabled=false; btn.textContent='☁ Gist에 저장'; }
+    renderGistBar();
+  }
+}
+
+// 앱 시작 시 Gist에서 최신 데이터 자동 로드 (회원/선생님 공통)
+async function gistAutoLoad(){
+  if(!gistId) return; // 연결된 적 없으면 스킵 (기본 데이터 사용)
+  try{
+    const res = await fetch('https://api.github.com/gists/'+gistId);
+    if(!res.ok) return;
+    const data = await res.json();
+    const file = data.files && data.files[GIST_FILENAME];
+    if(!file || !file.content) return;
+    const imported = JSON.parse(file.content);
+    if(!Array.isArray(imported) || imported.length===0) return;
+    CUR.length = 0;
+    imported.forEach(s=>CUR.push(s));
+    CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
+    renderSidebar();
+    if(cur){
+      const stillExists = CUR.flatMap(s=>s.lessons).find(l=>l.id===cur.id);
+      if(stillExists) renderLesson(stillExists);
+    }
+  }catch(e){
+    // 조용히 무시 — 기본 데이터로 계속 진행
+  }
+}
+
 function saveMgrVideo(lid){
   const title=document.getElementById('mf-title')?.value.trim()||'';
   const url  =document.getElementById('mf-url')?.value.trim()||'';
@@ -882,6 +1227,9 @@ CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s
 
 renderSidebar();
 renderWelcome();
+
+// Gist에 저장된 적이 있으면 최신 데이터 자동 동기화 (회원/선생님 공통)
+gistAutoLoad();
 </script>
 </body>
 </html>
