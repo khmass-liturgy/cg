@@ -206,42 +206,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <button onclick="closeMgr()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:2px 6px;line-height:1">✕</button>
       </div>
     </div>
-
-    <!-- Gist 연동 상태 바 -->
-    <div id="gist-bar" style="padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0"></div>
-
     <div id="mgr-body" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="padding:13px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:wrap">
-      <div style="font-size:12.5px;color:var(--text3)">Gist 연동 시 회원 화면에 자동 반영 · 미연동 시 소스 내보내기로 배포</div>
-      <div style="display:flex;gap:8px">
-        <button id="gist-save-btn" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="gistSave()">☁ Gist에 저장</button>
-        <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Gist 설정(토큰) 모달 -->
-<div id="gist-setup-overlay" onclick="if(event.target===this)closeGistSetup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:14px;width:460px;max-width:92vw;padding:22px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
-    <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:6px">☁ Gist 연동 설정</div>
-    <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:14px">
-      이 기타반 앱 전용 GitHub Personal Access Token을 입력하세요.<br>
-      <a href="https://github.com/settings/tokens/new?scopes=gist&description=교하성당기타반앱" target="_blank" style="color:var(--blue)">여기서 새 토큰 발급</a>
-      (scope에서 <b>gist</b>만 체크하면 됩니다)
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <input id="gist-token-inp" type="password" placeholder="ghp_로 시작하는 토큰 붙여넣기"
-        style="border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:monospace;color:var(--text);background:var(--surface2)">
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="saveGistToken()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif">저장하고 연결</button>
-      <button onclick="closeGistSetup()" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:14px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
-    </div>
-    <div id="gist-setup-err" style="font-size:12.5px;color:var(--red);margin-top:8px"></div>
-    <div style="font-size:11.5px;color:var(--text3);margin-top:12px;line-height:1.5">
-      ※ 토큰은 이 브라우저에만 저장되며 회원들에게 노출되지 않습니다.<br>
-      ※ 처음 저장 시 새 Gist가 자동 생성됩니다.
+      <div style="font-size:12.5px;color:var(--text3)">수정 후 <b style="color:var(--accent)">소스 내보내기</b> → GitHub 저장소(cg 폴더)에 업로드해서 덮어쓰면 끝</div>
+      <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
     </div>
   </div>
 </div>
@@ -666,7 +634,6 @@ function openAdmin(){
   mgrEditIdx = null;
   document.getElementById('mgr-overlay').style.display='flex';
   renderMgr();
-  renderGistBar();
 }
 function closeMgr(){
   document.getElementById('mgr-overlay').style.display='none';
@@ -991,162 +958,6 @@ function exportHtml(){
   alert('✓ 파일이 다운로드됐습니다!\n수정된 guitar_app.html을 회원들에게 배포하세요.');
 }
 
-// ══════════════════════════════════════════════
-//  Gist 연동 — 토큰 저장 + Gist 생성/업데이트 + 자동 불러오기
-// ══════════════════════════════════════════════
-const GIST_DESC = '교하성당 클래식기타반 - 커리큘럼 데이터 (자동 생성, 직접 수정 금지)';
-const GIST_FILENAME = 'guitar_curriculum.json';
-
-let gistToken = localStorage.getItem('kg_gist_token') || '';
-let gistId    = localStorage.getItem('kg_gist_id') || '';
-let gistBusy  = false;
-let gistMsg   = '';
-
-function openGistSetup(){
-  document.getElementById('gist-setup-err').textContent='';
-  document.getElementById('gist-token-inp').value = gistToken;
-  document.getElementById('gist-setup-overlay').style.display='flex';
-}
-function closeGistSetup(){
-  document.getElementById('gist-setup-overlay').style.display='none';
-}
-
-async function saveGistToken(){
-  const t = document.getElementById('gist-token-inp').value.trim();
-  const err = document.getElementById('gist-setup-err');
-  if(!t){ err.textContent='토큰을 입력해 주세요.'; return; }
-  err.textContent='확인 중...';
-  // 토큰 유효성 간단 확인
-  try{
-    const res = await fetch('https://api.github.com/user', {
-      headers:{ 'Authorization':'token '+t, 'Accept':'application/vnd.github+json' }
-    });
-    if(!res.ok) throw new Error('토큰이 유효하지 않습니다 ('+res.status+')');
-  }catch(e){
-    err.textContent = '토큰 확인 실패: '+e.message;
-    return;
-  }
-  gistToken = t;
-  localStorage.setItem('kg_gist_token', gistToken);
-  closeGistSetup();
-  renderGistBar();
-  // 토큰만 저장하고 바로 첫 저장 실행
-  gistSave();
-}
-
-function disconnectGist(){
-  if(!confirm('Gist 연동을 해제할까요? (Gist 자체는 삭제되지 않습니다)')) return;
-  gistToken=''; gistId='';
-  localStorage.removeItem('kg_gist_token');
-  localStorage.removeItem('kg_gist_id');
-  renderGistBar();
-}
-
-function renderGistBar(){
-  const bar = document.getElementById('gist-bar');
-  if(!bar) return;
-  if(!gistToken){
-    bar.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-size:13px;color:var(--text2)">☁ Gist 연동을 설정하면 저장 즉시 모든 회원 화면에 자동 반영됩니다</div>
-        <button onclick="openGistSetup()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif">Gist 연동 설정</button>
-      </div>`;
-  } else {
-    bar.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-size:13px;color:var(--green);font-weight:500">
-          ✓ Gist 연동됨 ${gistId?`<span style="color:var(--text3);font-weight:400;font-size:12px">(ID: ${gistId.slice(0,8)}...)</span>`:'<span style="color:var(--text3);font-weight:400;font-size:12px">(아직 저장 안 함)</span>'}
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${gistId?`<a href="https://gist.github.com/${gistId}" target="_blank" style="font-size:12.5px;color:var(--blue);text-decoration:none">원본 보기 ↗</a>`:''}
-          <button onclick="disconnectGist()" style="background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">연결 해제</button>
-        </div>
-      </div>
-      ${gistMsg?`<div style="font-size:12.5px;color:${gistMsg.startsWith('✓')?'var(--green)':'var(--red)'};margin-top:6px">${gistMsg}</div>`:''}`;
-  }
-}
-
-// CUR 데이터를 JSON으로 직렬화 (내부함수 재사용 위해 videos/explain 등 그대로)
-function curToJson(){
-  return JSON.stringify(CUR.map(s=>({
-    id:s.id, title:s.title,
-    lessons:s.lessons.map(l=>({
-      id:l.id, title:l.title, desc:l.desc, explain:l.explain,
-      points:l.points, score:l.score, scoreCaption:l.scoreCaption,
-      videos:l.videos, practice:l.practice
-    }))
-  })), null, 2);
-}
-
-async function gistSave(){
-  if(!gistToken){ openGistSetup(); return; }
-  if(gistBusy) return;
-  gistBusy = true;
-  const btn = document.getElementById('gist-save-btn');
-  if(btn){ btn.disabled=true; btn.textContent='저장 중...'; }
-  gistMsg = '';
-  try{
-    const content = curToJson();
-    const body = {
-      description: GIST_DESC,
-      public: false,
-      files: { [GIST_FILENAME]: { content } }
-    };
-    let res;
-    if(gistId){
-      res = await fetch('https://api.github.com/gists/'+gistId, {
-        method:'PATCH',
-        headers:{ 'Authorization':'token '+gistToken, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
-      });
-    } else {
-      res = await fetch('https://api.github.com/gists', {
-        method:'POST',
-        headers:{ 'Authorization':'token '+gistToken, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
-      });
-    }
-    if(!res.ok){
-      const errBody = await res.text();
-      throw new Error('저장 실패 ('+res.status+')');
-    }
-    const data = await res.json();
-    gistId = data.id;
-    localStorage.setItem('kg_gist_id', gistId);
-    gistMsg = '✓ 저장 완료! 회원들 화면에도 자동 반영됩니다.';
-  } catch(e){
-    gistMsg = '✗ '+e.message;
-  } finally {
-    gistBusy = false;
-    if(btn){ btn.disabled=false; btn.textContent='☁ Gist에 저장'; }
-    renderGistBar();
-  }
-}
-
-// 앱 시작 시 Gist에서 최신 데이터 자동 로드 (회원/선생님 공통)
-async function gistAutoLoad(){
-  if(!gistId) return; // 연결된 적 없으면 스킵 (기본 데이터 사용)
-  try{
-    const res = await fetch('https://api.github.com/gists/'+gistId);
-    if(!res.ok) return;
-    const data = await res.json();
-    const file = data.files && data.files[GIST_FILENAME];
-    if(!file || !file.content) return;
-    const imported = JSON.parse(file.content);
-    if(!Array.isArray(imported) || imported.length===0) return;
-    CUR.length = 0;
-    imported.forEach(s=>CUR.push(s));
-    CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s.title;}));
-    renderSidebar();
-    if(cur){
-      const stillExists = CUR.flatMap(s=>s.lessons).find(l=>l.id===cur.id);
-      if(stillExists) renderLesson(stillExists);
-    }
-  }catch(e){
-    // 조용히 무시 — 기본 데이터로 계속 진행
-  }
-}
-
 function saveMgrVideo(lid){
   const title=document.getElementById('mf-title')?.value.trim()||'';
   const url  =document.getElementById('mf-url')?.value.trim()||'';
@@ -1227,9 +1038,6 @@ CUR.forEach((s,si)=>s.lessons.forEach((l,li)=>{l._si=si;l._li=li;l._stageTitle=s
 
 renderSidebar();
 renderWelcome();
-
-// Gist에 저장된 적이 있으면 최신 데이터 자동 동기화 (회원/선생님 공통)
-gistAutoLoad();
 </script>
 </body>
 </html>
