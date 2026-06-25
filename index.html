@@ -208,9 +208,47 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     </div>
     <div id="mgr-body" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="padding:13px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:wrap">
-      <div style="font-size:12.5px;color:var(--text3)">수정 후 <b style="color:var(--accent)">소스 내보내기</b> → GitHub 저장소(cg 폴더)에 업로드해서 덮어쓰면 끝</div>
-      <button style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" onclick="exportHtml()">⬇ 소스 내보내기</button>
+      <div id="gh-status" style="font-size:12.5px;color:var(--text3)">수정 후 <b style="color:var(--green)">GitHub에 저장</b>하면 모든 회원에게 즉시 반영됩니다</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="gh-save-btn" onclick="githubSave()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap">☁ GitHub에 저장</button>
+        <button onclick="exportHtml()" style="background:var(--surface);color:var(--text2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap">⬇ 파일로 내보내기</button>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- GitHub 토큰 설정 모달 -->
+<div id="gh-setup-overlay" onclick="if(event.target===this)closeGhSetup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:14px;width:480px;max-width:92vw;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--accent);margin-bottom:6px">GitHub 자동 업로드 설정</div>
+    <div style="font-size:13.5px;color:var(--text2);line-height:1.7;margin-bottom:16px">
+      수정 내용을 GitHub Pages에 자동으로 올리려면<br>
+      <b>Personal Access Token</b>이 필요합니다. (최초 1회만 설정)
+    </div>
+
+    <div style="background:var(--blue-bg);border:1px solid #b8d0e8;border-radius:10px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:8px">토큰 발급 방법</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8;display:flex;flex-direction:column;gap:3px">
+        <div><b>①</b> <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--blue)">github.com/settings/tokens/new</a> 접속</div>
+        <div><b>②</b> Note: 아무 이름 입력 (예: 기타반앱)</div>
+        <div><b>③</b> Expiration: No expiration 선택</div>
+        <div><b>④</b> Scopes에서 <b style="color:var(--blue)">repo</b> 체크 (전체 선택)</div>
+        <div><b>⑤</b> Generate token → 나온 토큰 복사</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <input id="gh-token-inp" type="password"
+        placeholder="ghp_ 로 시작하는 토큰 붙여넣기"
+        style="border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:monospace;color:var(--text);background:var(--surface2);width:100%">
+      <div style="font-size:12px;color:var(--text3)">※ 토큰은 이 브라우저에만 저장됩니다. 회원 파일에는 포함되지 않습니다.</div>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button onclick="saveGhToken()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif">저장하고 업로드</button>
+      <button onclick="closeGhSetup()" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:14px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+    </div>
+    <div id="gh-setup-err" style="font-size:12.5px;color:var(--red);margin-top:8px"></div>
   </div>
 </div>
 
@@ -884,80 +922,183 @@ function cancelMgrEdit(){
   renderMgr();
 }
 
-// ── 소스 내보내기 ─────────────────────────────
-// CUR 데이터를 직렬화해서 원본 소스의 마커 사이에 주입 후 다운로드
+// ── 소스 내보내기 (파일 다운로드) ────────────
 function exportHtml(){
-  // CUR을 JS 소스 문자열로 직렬화
-  function serializeVideos(vids){
-    if(!vids||vids.length===0) return '[]';
-    const lines=vids.map(v=>{
-      const t=v.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const c=(v.channel||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const u=(v.url||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const d=(v.dur||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `       {title:'${t}',channel:'${c}',url:'${u}',dur:'${d}'}`;
-    });
-    return `[\n${lines.join(',\n')}]`;
-  }
-
-  // 원본 HTML 소스 가져오기 (스크립트 태그 내부)
   const scripts=document.querySelectorAll('script');
   let rawSrc='';
   for(const s of scripts){
     if(s.src) continue;
-    if(s.textContent.includes('%%CUR_START%%')){
-      rawSrc=s.textContent; break;
-    }
+    if(s.textContent.includes('%%CUR_START%%')){ rawSrc=s.textContent; break; }
   }
   if(!rawSrc){ alert('소스를 찾을 수 없습니다.'); return; }
-
-  // CUR 블록 새로 생성
-  const newCurLines=['/*%%CUR_START%%*/','const CUR=['];
-  CUR.forEach((stage,si)=>{
-    newCurLines.push(`  {id:'${stage.id}',title:'${stage.title.replace(/'/g,"\\'")}',lessons:[`);
-    stage.lessons.forEach((l,li)=>{
-      const isLast=(li===stage.lessons.length-1);
-      // score, scoreCaption 직렬화
-      const scoreVal = l.score===null ? 'null' : `'${String(l.score).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}'`;
-      const capVal = `'${(l.scoreCaption||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}'`;
-      // videos 직렬화
-      const vidsStr = serializeVideos(l.videos);
-      newCurLines.push(`    {id:'${l.id}',title:'${l.title.replace(/'/g,"\\'")}',desc:'${(l.desc||'').replace(/'/g,"\\'")}',`);
-      newCurLines.push(`     explain:${JSON.stringify(l.explain||'')},`);
-      newCurLines.push(`     points:${JSON.stringify(l.points||[])},`);
-      newCurLines.push(`     score:${scoreVal},scoreCaption:${capVal},`);
-      newCurLines.push(`     videos:${vidsStr},`);
-      newCurLines.push(`     practice:${JSON.stringify(l.practice||[])}}${isLast?'':','}`);
-    });
-    const isLastStage=(si===CUR.length-1);
-    newCurLines.push(`  ]}${isLastStage?'':','}`);
-  });
-  newCurLines.push('];','/*%%CUR_END%%*/');
-  const newCurBlock=newCurLines.join('\n');
-
-  // 원본 소스에서 마커 사이 교체
-  const startMarker='/*%%CUR_START%%*/';
-  const endMarker='/*%%CUR_END%%*/';
-  const si=rawSrc.indexOf(startMarker);
-  const ei=rawSrc.indexOf(endMarker)+endMarker.length;
-  if(si===-1||ei===endMarker.length-1){ alert('마커를 찾을 수 없습니다.'); return; }
+  const newCurBlock=buildCurBlock();
+  const startM='/*%%CUR_START%%*/';
+  const endM='/*%%CUR_END%%*/';
+  const si=rawSrc.indexOf(startM);
+  const ei=rawSrc.indexOf(endM)+endM.length;
+  if(si===-1){ alert('마커를 찾을 수 없습니다.'); return; }
   const newScript=rawSrc.slice(0,si)+newCurBlock+rawSrc.slice(ei);
-
-  // 전체 HTML 재구성
-  const fullHtml=document.documentElement.outerHTML
-    .replace(rawSrc, newScript);
-
+  const fullHtml=document.documentElement.outerHTML.replace(rawSrc,newScript);
   const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='guitar_app.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-  alert('✓ 파일이 다운로드됐습니다!\n수정된 guitar_app.html을 회원들에게 배포하세요.');
+  alert('✓ 파일이 다운로드됐습니다!');
 }
 
+// ══════════════════════════════════════════════
+//  GitHub API 자동 업로드
+//  저장소: khmass-liturgy / cg / index.html (또는 guitar_app.html)
+// ══════════════════════════════════════════════
+const GH_OWNER  = 'khmass-liturgy';
+const GH_REPO   = 'cg';
+const GH_PATH   = 'index.html'; // 저장소 내 파일 경로
+
+let ghToken = localStorage.getItem('kg_gh_token') || '';
+let ghBusy  = false;
+
+function openGhSetup(){
+  document.getElementById('gh-token-inp').value = ghToken;
+  document.getElementById('gh-setup-err').textContent = '';
+  document.getElementById('gh-setup-overlay').style.display = 'flex';
+}
+function closeGhSetup(){
+  document.getElementById('gh-setup-overlay').style.display = 'none';
+}
+
+async function saveGhToken(){
+  const t = document.getElementById('gh-token-inp').value.trim();
+  const err = document.getElementById('gh-setup-err');
+  if(!t){ err.textContent = '토큰을 입력해 주세요.'; return; }
+  err.textContent = '확인 중...';
+  try{
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {
+      headers:{ 'Authorization':'token '+t, 'Accept':'application/vnd.github+json' }
+    });
+    if(!res.ok) throw new Error('저장소 접근 불가 ('+res.status+') — 토큰 또는 저장소명을 확인해 주세요.');
+  }catch(e){
+    err.textContent = '✗ '+e.message; return;
+  }
+  ghToken = t;
+  localStorage.setItem('kg_gh_token', ghToken);
+  closeGhSetup();
+  // 토큰 저장 후 바로 업로드 실행
+  await doGithubUpload();
+}
+
+async function githubSave(){
+  if(!ghToken){ openGhSetup(); return; }
+  await doGithubUpload();
+}
+
+async function doGithubUpload(){
+  if(ghBusy) return;
+  ghBusy = true;
+  const btn = document.getElementById('gh-save-btn');
+  const status = document.getElementById('gh-status');
+  if(btn){ btn.disabled=true; btn.textContent='업로드 중...'; }
+  if(status) status.style.color='var(--text3)';
+
+  try{
+    // 1. 현재 파일의 SHA 가져오기 (업데이트 시 필요)
+    const getRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`, {
+      headers:{ 'Authorization':'token '+ghToken, 'Accept':'application/vnd.github+json' }
+    });
+    let sha = null;
+    if(getRes.ok){
+      const getData = await getRes.json();
+      sha = getData.sha;
+    }
+
+    // 2. 수정된 HTML 소스 생성 (exportHtml과 동일한 방식)
+    const scripts = document.querySelectorAll('script');
+    let rawSrc = '';
+    for(const s of scripts){
+      if(s.src) continue;
+      if(s.textContent.includes('%%CUR_START%%')){ rawSrc=s.textContent; break; }
+    }
+    if(!rawSrc) throw new Error('소스를 찾을 수 없습니다.');
+
+    const newCurBlock = buildCurBlock();
+    const startM = '/*%%CUR_START%%*/';
+    const endM   = '/*%%CUR_END%%*/';
+    const si = rawSrc.indexOf(startM);
+    const ei = rawSrc.indexOf(endM) + endM.length;
+    const newScript = rawSrc.slice(0,si) + newCurBlock + rawSrc.slice(ei);
+    const fullHtml = document.documentElement.outerHTML.replace(rawSrc, newScript);
+
+    // 3. Base64 인코딩
+    const encoded = btoa(unescape(encodeURIComponent(fullHtml)));
+
+    // 4. GitHub API PUT
+    const body = {
+      message: '강좌 관리 업데이트 — '+new Date().toLocaleString('ko-KR'),
+      content: encoded,
+    };
+    if(sha) body.sha = sha;
+
+    const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`, {
+      method: 'PUT',
+      headers:{
+        'Authorization':'token '+ghToken,
+        'Accept':'application/vnd.github+json',
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if(!putRes.ok){
+      const errData = await putRes.json();
+      throw new Error(errData.message || '업로드 실패 ('+putRes.status+')');
+    }
+
+    if(status){
+      status.innerHTML = '✓ GitHub 업로드 완료! <span style="color:var(--text3)">약 1분 후 <a href="https://khmass-liturgy.github.io/cg/" target="_blank" style="color:var(--blue)">사이트</a>에 반영됩니다</span>';
+      status.style.color = 'var(--green)';
+    }
+
+  }catch(e){
+    if(status){
+      status.textContent = '✗ 오류: '+e.message;
+      status.style.color = 'var(--red)';
+    }
+    // 토큰 문제면 재설정 유도
+    if(e.message.includes('401') || e.message.includes('403')){
+      ghToken=''; localStorage.removeItem('kg_gh_token');
+      setTimeout(()=>openGhSetup(), 1000);
+    }
+  }finally{
+    ghBusy = false;
+    if(btn){ btn.disabled=false; btn.textContent='☁ GitHub에 저장'; }
+  }
+}
+
+// CUR 데이터로 새 소스 블록 생성 (exportHtml과 공유)
+function buildCurBlock(){
+  function sv(vids){
+    if(!vids||!vids.length) return '[]';
+    return `[\n${vids.map(v=>`       {title:'${esc2(v.title)}',channel:'${esc2(v.channel||'')}',url:'${esc2(v.url||'')}',dur:'${esc2(v.dur||'')}'}`).join(',\n')}]`;
+  }
+  function esc2(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+  const lines=['/*%%CUR_START%%*/','const CUR=['];
+  CUR.forEach((stage,si)=>{
+    lines.push(`  {id:'${stage.id}',title:'${esc2(stage.title)}',lessons:[`);
+    stage.lessons.forEach((l,li)=>{
+      const scoreVal = l.score===null?'null':`'${esc2(String(l.score)).replace(/\n/g,'\\n')}'`;
+      lines.push(`    {id:'${l.id}',title:'${esc2(l.title)}',desc:'${esc2(l.desc||'')}',`);
+      lines.push(`     explain:${JSON.stringify(l.explain||'')},`);
+      lines.push(`     points:${JSON.stringify(l.points||[])},`);
+      lines.push(`     score:${scoreVal},scoreCaption:'${esc2(l.scoreCaption||'')}',`);
+      lines.push(`     videos:${sv(l.videos)},`);
+      lines.push(`     practice:${JSON.stringify(l.practice||[])}}${li<stage.lessons.length-1?',':''}`);
+    });
+    lines.push(`  ]}${si<CUR.length-1?',':''}`);
+  });
+  lines.push('];','/*%%CUR_END%%*/');
+  return lines.join('\n');
+}
 function saveMgrVideo(lid){
   const title=document.getElementById('mf-title')?.value.trim()||'';
   const url  =document.getElementById('mf-url')?.value.trim()||'';
