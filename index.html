@@ -1029,12 +1029,17 @@ async function doGithubUpload(){
     const newScript = rawSrc.slice(0,si) + newCurBlock + rawSrc.slice(ei);
     const fullHtml = document.documentElement.outerHTML.replace(rawSrc, newScript);
 
-    // 3. Base64 인코딩
-    const encoded = btoa(unescape(encodeURIComponent(fullHtml)));
+    // 3. Base64 인코딩 (한글 포함 UTF-8 안전 방식)
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(fullHtml);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    const encoded = btoa(binary);
 
     // 4. GitHub API PUT
+    const now = new Date();
     const body = {
-      message: '강좌 관리 업데이트 — '+new Date().toLocaleString('ko-KR'),
+      message: 'Update curriculum ' + now.toISOString().slice(0,16).replace('T',' '),
       content: encoded,
     };
     if(sha) body.sha = sha;
