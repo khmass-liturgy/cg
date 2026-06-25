@@ -109,7 +109,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .btn-save-html{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
 .btn-save-html:hover{background:#6d5010}
 .mgr-lesson-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:4px}
-.mgr-lesson-head{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.mgr-lesson-head{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;transition:background .15s;pointer-events:auto}
 .mgr-lesson-head:hover{background:var(--accent-light)}
 .mgr-lesson-head.open{background:var(--accent-light)}
 .mgr-lesson-badge{font-size:11px;font-weight:600;color:var(--accent);background:rgba(139,105,20,.1);padding:2px 8px;border-radius:10px;flex-shrink:0}
@@ -715,8 +715,10 @@ function renderMgr(){
       <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-light);border-bottom:1px solid #e8d88a">
         <div style="width:28px;height:28px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${si+1}</div>
         <div style="flex:1;font-size:15px;font-weight:600;color:var(--accent)">${escHtml(stage.title)}</div>
-        <button class="btn-mcancel" style="font-size:12px;padding:5px 10px;color:var(--text3)" onclick="event.stopPropagation();addLesson('${stage.id}')">＋ 레슨 추가</button>
-        <button class="btn-vdel" style="font-size:12px;padding:5px 10px" onclick="event.stopPropagation();delStage('${stage.id}')">단계 삭제</button>
+        <button class="btn-mcancel" style="font-size:12px;padding:5px 10px;color:var(--text3)"
+          data-sid="${stage.id}" onclick="event.stopPropagation();addLesson(this.dataset.sid)">＋ 레슨 추가</button>
+        <button class="btn-vdel" style="font-size:12px;padding:5px 10px"
+          data-sid="${stage.id}" onclick="event.stopPropagation();delStage(this.dataset.sid)">단계 삭제</button>
       </div>
       <!-- 레슨 목록 -->
       <div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">
@@ -728,9 +730,10 @@ function renderMgr(){
             <div class="mgr-lesson-head${isOpen?' open':''}" data-lid="${lesson.id}" onclick="toggleMgrLesson(this.dataset.lid)">
               <span class="mgr-lesson-badge">${lesson.id}</span>
               <span class="mgr-lesson-title">${escHtml(lesson.title)}</span>
-              <span class="mgr-lesson-cnt">강좌 ${vids.length}개</span>
-              <button class="btn-vdel" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="event.stopPropagation();delLesson('${stage.id}','${lesson.id}')">레슨 삭제</button>
-              <span style="font-size:12px;color:var(--text3);margin-left:4px">${isOpen?'▲':'▼'}</span>
+              <span class="mgr-lesson-cnt">강좌 ${vids.length}개 ${isOpen?'▲':'▼'}</span>
+              <button class="btn-vdel" style="font-size:11px;padding:3px 8px;margin-left:6px"
+                data-sid="${stage.id}" data-lid="${lesson.id}"
+                onclick="event.stopPropagation();delLesson(this.dataset.sid,this.dataset.lid)">레슨 삭제</button>
             </div>
             <div class="mgr-lesson-body${isOpen?' open':''}">
               ${vids.length===0
