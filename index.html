@@ -428,6 +428,9 @@ async function gistLoad(){
 async function gistSave(){
   if(!gistToken){alert('토큰을 먼저 입력해 주세요.');return;}
   if(gistBusy)return;
+  // 저장할 Gist ID — 항상 고정 ID 사용 (절대 새로 생성하지 않음)
+  const targetId=gistId||DEFAULT_GIST_ID;
+  if(!targetId){alert('Gist ID가 설정되지 않았습니다.\nHTML 소스를 확인해 주세요.');return;}
   gistBusy=true;renderMgr();
   try{
     const videos={},scores={},titles={};
@@ -436,23 +439,25 @@ async function gistSave(){
       if(l._gd)scores[l.id]=l._gd;
       titles[l.id]=l.title;
     });
-    // 추가 과정(기본 2개 외) 저장
     const extraCourses=CUR.length>2?CUR.slice(2).map(c=>({
       id:c.id,title:c.title,label:c.label||'',sub:c.sub||'',
       lessons:c.lessons.map(l=>({id:l.id,title:l.title}))
     })):[];
     const content=JSON.stringify({videos,scores,titles,extraCourses},null,2);
     const body={description:'교하성당 클래식기타반 강좌 데이터',public:false,files:{[GIST_FILE]:{content}}};
-    let r;
-    if(gistId){
-      r=await fetch('https://api.github.com/gists/'+gistId,{method:'PATCH',headers:{'Authorization':'token '+gistToken,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    }else{
-      r=await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'token '+gistToken,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    // 항상 PATCH (기존 Gist 업데이트) — POST(신규 생성) 절대 안 함
+    const r=await fetch('https://api.github.com/gists/'+targetId,{
+      method:'PATCH',
+      headers:{'Authorization':'token '+gistToken,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){
+      const msg=r.status===404?'Gist를 찾을 수 없습니다. Gist ID를 확인해 주세요.'
+               :r.status===403||r.status===401?'토큰 권한이 없습니다. gist scope를 확인해 주세요.'
+               :'저장 실패('+r.status+')';
+      throw new Error(msg);
     }
-    if(!r.ok)throw new Error('저장 실패('+r.status+')');
-    const d=await r.json();
-    gistId=d.id;
-    localStorage.setItem('kg_gist_id',gistId);
+    // ID는 항상 동일한 값 유지 (변경하지 않음)
     localStorage.setItem('kg_gist_token',gistToken);
     alert('✓ Gist에 저장됐습니다!\n모든 회원이 새로고침하면 최신 내용이 보입니다.');
   }catch(e){alert('저장 실패: '+e.message);}
@@ -502,9 +507,10 @@ async function connectGist(){
   try{
     const r=await fetch('https://api.github.com/user',{headers:{'Authorization':'token '+t,'Accept':'application/vnd.github+json'}});
     if(!r.ok)throw new Error('토큰이 유효하지 않습니다.');
-    gistToken=t;localStorage.setItem('kg_gist_token',gistToken);
+    gistToken=t;
+    localStorage.setItem('kg_gist_token',gistToken);
     if(err)err.textContent='';
-    renderMgr();gistSave();
+    renderMgr(); // 연결 상태만 표시, 저장은 선생님이 직접 버튼 클릭
   }catch(e){if(err)err.textContent='✗ '+e.message;}
 }
 
