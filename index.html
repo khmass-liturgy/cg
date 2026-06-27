@@ -391,9 +391,10 @@ let gistBusy=false;
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 async function gistLoad(){
-  if(!gistId)return;
+  const loadId=gistId||DEFAULT_GIST_ID;
+  if(!loadId)return;
   try{
-    const r=await fetch('https://api.github.com/gists/'+gistId,{headers:{'Accept':'application/vnd.github+json'}});
+    const r=await fetch('https://api.github.com/gists/'+loadId,{headers:{'Accept':'application/vnd.github+json'}});
     if(!r.ok)return;
     const d=await r.json();
     const f=d.files&&d.files[GIST_FILE];
@@ -515,9 +516,10 @@ async function connectGist(){
 }
 
 function disconnectGist(){
-  if(!confirm('Gist 연동을 해제할까요?'))return;
-  gistToken='';gistId='';
-  localStorage.removeItem('kg_gist_token');localStorage.removeItem('kg_gist_id');
+  if(!confirm('Gist 연동을 해제할까요?\n(읽기는 계속 유지됩니다. 저장 토큰만 해제됩니다)'))return;
+  gistToken='';
+  localStorage.removeItem('kg_gist_token');
+  // gistId는 DEFAULT_GIST_ID 유지 — 회원 읽기용은 계속 작동
   renderMgr();
 }
 
