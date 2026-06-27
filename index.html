@@ -399,8 +399,29 @@ async function gistLoad(){
     const f=d.files&&d.files[GIST_FILE];
     if(!f||!f.content)return;
     const j=JSON.parse(f.content);
+    // 영상
     if(j.videos)Object.entries(j.videos).forEach(([lid,v])=>{const l=allLessons().find(x=>x.id===lid);if(l)l.videos=v;});
+    // 악보
     if(j.scores)Object.entries(j.scores).forEach(([lid,u])=>{const l=allLessons().find(x=>x.id===lid);if(l)l._gd=u;});
+    // 강의명
+    if(j.titles)Object.entries(j.titles).forEach(([lid,t])=>{const l=allLessons().find(x=>x.id===lid);if(l)l.title=t;});
+    // 추가 과정 복원 (기존에 없는 것만)
+    if(j.extraCourses&&Array.isArray(j.extraCourses)){
+      j.extraCourses.forEach(ec=>{
+        if(!CUR.find(c=>c.id===ec.id)){
+          CUR.push({
+            id:ec.id,title:ec.title,label:ec.label||'',sub:ec.sub||'',
+            playlist:{title:ec.title,channel:'',url:'',dur:'재생목록'},
+            lessons:(ec.lessons||[]).map(l=>({
+              id:l.id,title:l.title,desc:'',
+              explain:'선생님이 내용을 추가해 주세요.',
+              points:['내용을 입력해 주세요'],
+              score:null,scoreCaption:'',videos:[],practice:['연습 내용을 입력해 주세요']
+            }))
+          });
+        }
+      });
+    }
   }catch(e){}
 }
 
@@ -409,9 +430,18 @@ async function gistSave(){
   if(gistBusy)return;
   gistBusy=true;renderMgr();
   try{
-    const videos={},scores={};
-    allLessons().forEach(l=>{if(l.videos&&l.videos.length)videos[l.id]=l.videos;if(l._gd)scores[l.id]=l._gd;});
-    const content=JSON.stringify({videos,scores},null,2);
+    const videos={},scores={},titles={};
+    allLessons().forEach(l=>{
+      if(l.videos&&l.videos.length)videos[l.id]=l.videos;
+      if(l._gd)scores[l.id]=l._gd;
+      titles[l.id]=l.title;
+    });
+    // 추가 과정(기본 2개 외) 저장
+    const extraCourses=CUR.length>2?CUR.slice(2).map(c=>({
+      id:c.id,title:c.title,label:c.label||'',sub:c.sub||'',
+      lessons:c.lessons.map(l=>({id:l.id,title:l.title}))
+    })):[];
+    const content=JSON.stringify({videos,scores,titles,extraCourses},null,2);
     const body={description:'교하성당 클래식기타반 강좌 데이터',public:false,files:{[GIST_FILE]:{content}}};
     let r;
     if(gistId){
@@ -424,7 +454,7 @@ async function gistSave(){
     gistId=d.id;
     localStorage.setItem('kg_gist_id',gistId);
     localStorage.setItem('kg_gist_token',gistToken);
-    alert('✓ Gist에 저장됐습니다!\n\n이제 ⬇ 소스 내보내기를 눌러\n파일을 GitHub Pages에 올리거나 회원들에게 배포하세요.\n그러면 누구나 자동으로 최신 내용을 볼 수 있습니다.');
+    alert('✓ Gist에 저장됐습니다!\n모든 회원이 새로고침하면 최신 내용이 보입니다.');
   }catch(e){alert('저장 실패: '+e.message);}
   finally{gistBusy=false;renderMgr();}
 }
@@ -489,7 +519,7 @@ function disconnectGist(){
 let done=new Set(JSON.parse(localStorage.getItem('kg_done')||'[]'));
 let activeCourse='c1';
 let curLesson=null;
-let mgrLid=null, mgrEdit=null;
+let mgrLid=null, mgrEdit=null, mgrTab='video';
 function saveDone(){localStorage.setItem('kg_done',JSON.stringify([...done]));}
 function allLessons(){return CUR.flatMap(c=>c.lessons);}
 function totalLessons(){return allLessons().length;}
@@ -667,22 +697,26 @@ function delGd(lid){
 }
 
 // ── 강좌 관리 ──
+let mgrTab='video'; // 'video' | 'rename' | 'course'
+
 function showMgr(){
-  mgrLid=mgrLid||CUR[0].lessons[0].id;mgrEdit=null;
+  mgrLid=mgrLid||CUR[0].lessons[0].id;
+  mgrEdit=null; mgrTab='video';
   document.getElementById('home').style.display='none';
   document.getElementById('detail').style.display='none';
   document.getElementById('mgr').style.display='block';
-  renderMgr();window.scrollTo(0,0);
+  renderMgr(); window.scrollTo(0,0);
 }
 function hideMgr(){
   if(curLesson)openLesson(curLesson.id);else goHome();
 }
+function switchTab(t){ mgrTab=t; mgrEdit=null; renderMgr(); }
 
 function renderMgr(){
-  const opts=CUR.map(c=>`<optgroup label="${c.title}">`+c.lessons.map(l=>`<option value="${l.id}"${l.id===mgrLid?' selected':''}>${l.title}</option>`).join('')+`</optgroup>`).join('');
   const lesson=allLessons().find(l=>l.id===mgrLid);
   const vids=lesson?lesson.videos||[]:[];
 
+  // Gist 카드
   const gistCard=gistId
     ?`<div class="card ok">
         <div class="card-t">☁ Gist 연동됨 <span style="font-size:11px;color:var(--ink3)">${gistId.slice(0,8)}…</span></div>
@@ -694,59 +728,161 @@ function renderMgr(){
           <button class="b-ghost" onclick="disconnectGist()">연결 해제</button>
         </div>
         <div style="font-size:12px;color:var(--sage);margin-top:8px;line-height:1.6">
-          💡 <b>Gist에 저장</b> → <b>소스 내보내기</b> → GitHub Pages에 업로드하면<br>
-          모든 회원이 파일을 다시 받지 않아도 자동으로 최신 강좌를 봅니다.
+          💡 수정 후 <b>Gist에 저장</b>하면 모든 회원에게 자동 반영됩니다
         </div>
       </div>`
     :`<div class="card">
         <div class="card-t">☁ Gist 연동 설정</div>
         <div class="hint-box">강좌를 저장하면 <b>모든 회원 화면에 자동 반영</b>됩니다.<br>
-          <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank">토큰 발급 ↗</a> (scope: <b>gist</b> 체크) → 토큰 입력 후 연결<br><br>
-          <b>이미 Gist ID를 알고 있다면</b> 아래에 직접 입력하세요 (토큰 불필요, 읽기 전용)
+          <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank">토큰 발급 ↗</a> (scope: <b>gist</b> 체크)
         </div>
         <div class="row">
-          <input class="in mono" id="gtok" type="password" placeholder="ghp_ 토큰 (저장 권한 필요)">
-          <button class="b-gold" onclick="connectGist()">토큰으로 연결</button>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <input class="in mono" id="gid-direct" type="text" placeholder="Gist ID 직접 입력 (읽기 전용)">
-          <button class="b-ghost" onclick="connectGistIdOnly()">ID만 연결</button>
+          <input class="in mono" id="gtok" type="password" placeholder="ghp_ 토큰">
+          <button class="b-gold" onclick="connectGist()">연결</button>
         </div>
         <div id="gerr" class="msg err"></div>
       </div>`;
 
+  // 탭 메뉴
+  const tabs=`
+    <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--line);border-radius:10px;overflow:hidden">
+      ${[['video','▶ 영상 관리'],['rename','✏ 강의명 수정'],['course','＋ 과정 관리']].map(([t,label])=>`
+        <button onclick="switchTab('${t}')" style="flex:1;padding:10px;font-size:13.5px;font-weight:${mgrTab===t?'600':'400'};
+          background:${mgrTab===t?'var(--wine)':'var(--paper)'};
+          color:${mgrTab===t?'#fff':'var(--ink2)'};
+          border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s">
+          ${label}
+        </button>`).join('')}
+    </div>`;
+
+  // ── 탭 1: 영상 관리 ──
+  const opts=CUR.map(c=>`<optgroup label="${c.title}">`
+    +c.lessons.map(l=>`<option value="${l.id}"${l.id===mgrLid?' selected':''}>${l.title}</option>`).join('')
+    +`</optgroup>`).join('');
+
   const vlist=vids.length
     ?vids.map((v,i)=>`<div class="vrow">
-        <div class="vrow-info"><div class="vrow-t">${esc(v.title)}</div><div class="vrow-s">${esc(v.channel||'')}${v.dur?' · '+esc(v.dur):''} · <span style="color:var(--sky)">${esc(v.url)}</span></div></div>
-        <div class="vrow-act"><button class="b-edit" data-i="${i}" onclick="mEdit(+this.dataset.i)">수정</button><button class="b-del" data-i="${i}" onclick="mDel(+this.dataset.i)">삭제</button></div>
+        <div class="vrow-info">
+          <div class="vrow-t">${esc(v.title)}</div>
+          <div class="vrow-s">${esc(v.channel||'')}${v.dur?' · '+esc(v.dur):''}<br>
+            <span style="color:var(--sky)">${esc(v.url)}</span>
+          </div>
+        </div>
+        <div class="vrow-act">
+          <button class="b-edit" data-i="${i}" onclick="mEdit(+this.dataset.i)">수정</button>
+          <button class="b-del" data-i="${i}" onclick="mDel(+this.dataset.i)">삭제</button>
+        </div>
       </div>`).join('')
     :`<div class="vempty">등록된 영상이 없습니다<br><small>해당 과정의 재생목록이 기본 표시됩니다</small></div>`;
 
-  let form='';
+  let vform='';
   if(mgrEdit!==null){
-    const isNew=mgrEdit===-1;const v=isNew?{}:(vids[mgrEdit]||{});
-    form=`<div class="addform">
+    const isNew=mgrEdit===-1; const v=isNew?{}:(vids[mgrEdit]||{});
+    vform=`<div class="addform">
       <div class="addform-t">${isNew?'＋ 새 영상 추가':'✦ 영상 수정'}</div>
       <div class="fgrid">
-        <div class="ffield full"><label>영상 제목 *</label><input id="mt" value="${esc(v.title)}" placeholder="예: 1강 기타 구조 강의"></div>
+        <div class="ffield full"><label>영상 제목 *</label><input id="mt" value="${esc(v.title||'')}" placeholder="예: 1강 기타 구조 강의"></div>
         <div class="ffield"><label>채널명</label><input id="mc" value="${esc(v.channel||'')}" placeholder="예: 클래식기타 왕초보"></div>
         <div class="ffield"><label>재생 시간</label><input id="md" value="${esc(v.dur||'')}" placeholder="예: 12분"></div>
         <div class="ffield full"><label>유튜브 URL *</label><input id="mu" value="${esc(v.url||'')}" placeholder="https://www.youtube.com/watch?v=..."></div>
       </div>
-      <div class="fact"><button class="b-gold" onclick="mSave()">저장</button><button class="b-ghost" onclick="mCancel()">취소</button><span id="merr" class="msg err"></span></div>
+      <div class="fact">
+        <button class="b-gold" onclick="mSave()">저장</button>
+        <button class="b-ghost" onclick="mCancel()">취소</button>
+        <span id="merr" class="msg err"></span>
+      </div>
     </div>`;
   }
 
+  const tabVideo=`
+    <div class="card sel-card"><label>강의 선택</label>
+      <select onchange="mChange(this.value)">${opts}</select>
+    </div>
+    <div class="card">
+      <div class="vbox-t">
+        <span>등록된 영상 <span style="color:var(--gold)">(${vids.length}개)</span></span>
+        ${mgrEdit===null?`<button class="b-add" onclick="mAdd()">＋ 영상 추가</button>`:''}
+      </div>
+      ${vlist}${vform}
+    </div>`;
+
+  // ── 탭 2: 강의명 수정 ──
+  const tabRename=`
+    <div class="card">
+      <div class="card-t" style="margin-bottom:14px">✏ 과정별 강의명 수정</div>
+      ${CUR.map(c=>`
+        <div style="margin-bottom:18px">
+          <div style="font-size:13px;font-weight:600;color:var(--wine);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line)">
+            ${esc(c.title)}
+          </div>
+          ${c.lessons.map(l=>`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+              <span style="font-size:12px;color:var(--ink3);width:36px;flex-shrink:0;text-align:right">${l.id.replace(/[a-z]+/,'')}</span>
+              <input class="in" style="flex:1;padding:7px 10px;font-size:13.5px"
+                id="rn_${l.id}" value="${esc(l.title)}"
+                onblur="saveRename('${l.id}',this.value)">
+            </div>`).join('')}
+        </div>`).join('')}
+      <div style="font-size:12.5px;color:var(--ink3)">※ 입력칸에서 나가면 자동 저장됩니다 · Gist에 저장해야 회원 반영</div>
+    </div>`;
+
+  // ── 탭 3: 과정 관리 ──
+  const courseList=CUR.map((c,ci)=>`
+    <div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:600;color:var(--wine);flex:1">${esc(c.title)}</span>
+        <span style="font-size:12px;color:var(--ink3)">${c.lessons.length}강</span>
+        ${CUR.length>1?`<button class="b-del" style="font-size:12px;padding:4px 10px"
+          data-ci="${ci}" onclick="deleteCourse(+this.dataset.ci)">과정 삭제</button>`:''}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12.5px;color:var(--ink2)">강의 추가:</span>
+        <input class="in" id="new_lesson_${c.id}" style="flex:1;padding:7px 10px;font-size:13.5px" placeholder="새 강의 제목">
+        <button class="b-sage" style="padding:7px 13px;font-size:13px"
+          data-cid="${c.id}" onclick="addLesson(this.dataset.cid)">추가</button>
+      </div>
+    </div>`).join('');
+
+  const tabCourse=`
+    <div class="card">
+      <div class="card-t" style="margin-bottom:14px">현재 과정 목록</div>
+      ${courseList}
+    </div>
+    <div class="card" style="border:1.5px dashed var(--gold-line);background:var(--gold-soft)">
+      <div class="card-t" style="margin-bottom:12px">＋ 새 과정 추가</div>
+      <div class="fgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px">
+        <div class="ffield full">
+          <label>과정 이름 *</label>
+          <input class="in" id="nc-title" placeholder="예: 중급 Ⅰ">
+        </div>
+        <div class="ffield">
+          <label>라벨 (영문)</label>
+          <input class="in" id="nc-label" placeholder="예: COURSE III">
+        </div>
+        <div class="ffield">
+          <label>부제</label>
+          <input class="in" id="nc-sub" placeholder="예: 중급 기초 · 12강">
+        </div>
+        <div class="ffield full">
+          <label>첫 번째 강의 제목 *</label>
+          <input class="in" id="nc-lesson" placeholder="예: 바레 코드 입문">
+        </div>
+      </div>
+      <div class="fact">
+        <button class="b-gold" onclick="addCourse()">＋ 과정 추가</button>
+        <span id="course-err" class="msg err"></span>
+      </div>
+    </div>`;
+
   document.getElementById('mgr').innerHTML=`
     <div class="mgr-wrap">
-      <div class="mgr-top"><button class="back-btn" onclick="hideMgr()">← 돌아가기</button><h2>강좌 관리</h2></div>
-      ${gistCard}
-      <div class="card sel-card"><label>강의 선택</label><select onchange="mChange(this.value)">${opts}</select></div>
-      <div class="card">
-        <div class="vbox-t"><span>등록된 영상 <span style="color:var(--gold)">(${vids.length}개)</span></span>${mgrEdit===null?`<button class="b-add" onclick="mAdd()">＋ 영상 추가</button>`:''}</div>
-        ${vlist}
-        ${form}
+      <div class="mgr-top">
+        <button class="back-btn" onclick="hideMgr()">← 돌아가기</button>
+        <h2>강좌 관리</h2>
       </div>
+      ${gistCard}
+      ${tabs}
+      ${mgrTab==='video'?tabVideo:mgrTab==='rename'?tabRename:tabCourse}
     </div>`;
 }
 
@@ -770,8 +906,81 @@ function mSave(){
 }
 function mDel(i){
   if(!confirm('이 영상을 삭제할까요?'))return;
-  const l=allLessons().find(x=>x.id===mgrLid);if(l&&l.videos)l.videos.splice(i,1);
+  const l=allLessons().find(x=>x.id===mgrLid);
+  if(l&&l.videos)l.videos.splice(i,1);
   mgrEdit=null;renderMgr();
+}
+
+// ── 강의명 수정 ──
+function saveRename(lid, val){
+  const title=val.trim();
+  if(!title)return;
+  const l=allLessons().find(x=>x.id===lid);
+  if(l&&l.title!==title){
+    l.title=title;
+    // 홈·사이드바도 갱신
+    renderHome();
+  }
+}
+
+// ── 과정 추가 / 강의 추가 / 과정 삭제 ──
+function addCourse(){
+  const title=document.getElementById('nc-title')?.value.trim()||'';
+  const label=document.getElementById('nc-label')?.value.trim()||'';
+  const sub=document.getElementById('nc-sub')?.value.trim()||'';
+  const lesson=document.getElementById('nc-lesson')?.value.trim()||'';
+  const err=document.getElementById('course-err');
+  if(!title){if(err)err.textContent='과정 이름을 입력해 주세요.';return;}
+  if(!lesson){if(err)err.textContent='첫 번째 강의 제목을 입력해 주세요.';return;}
+  const ci=CUR.length+1;
+  const newId='c'+ci;
+  const newLid=newId+'l1';
+  CUR.push({
+    id:newId,
+    title,
+    label:label||'COURSE '+ci,
+    sub:sub||title+' · 강의',
+    playlist:{title,channel:'',url:'',dur:'재생목록'},
+    lessons:[{
+      id:newLid,title:lesson,desc:'',
+      explain:'선생님이 내용을 추가해 주세요.',
+      points:['내용을 입력해 주세요'],
+      score:null,scoreCaption:'',videos:[],practice:['연습 내용을 입력해 주세요']
+    }]
+  });
+  mgrLid=newLid;
+  if(err)err.textContent='';
+  renderMgr();
+  renderHome();
+  alert(`✓ "${title}" 과정이 추가됐습니다!\n강의명 수정 탭에서 내용을 채워주세요.`);
+}
+
+function addLesson(cid){
+  const inp=document.getElementById('new_lesson_'+cid);
+  const title=inp?inp.value.trim():'';
+  if(!title){alert('강의 제목을 입력해 주세요.');return;}
+  const course=CUR.find(c=>c.id===cid);
+  if(!course)return;
+  const newLid=cid+'l'+(course.lessons.length+1);
+  course.lessons.push({
+    id:newLid,title,desc:'',
+    explain:'선생님이 내용을 추가해 주세요.',
+    points:['내용을 입력해 주세요'],
+    score:null,scoreCaption:'',videos:[],practice:['연습 내용을 입력해 주세요']
+  });
+  mgrLid=newLid;
+  renderMgr();
+  renderHome();
+}
+
+function deleteCourse(ci){
+  const course=CUR[ci];
+  if(!course)return;
+  if(!confirm(`"${course.title}" 과정 전체를 삭제할까요?\n${course.lessons.length}개 강의가 모두 삭제됩니다.`))return;
+  CUR.splice(ci,1);
+  mgrLid=CUR[0]?.lessons[0]?.id||null;
+  renderMgr();
+  renderHome();
 }
 
 // ── 초기화 ──
