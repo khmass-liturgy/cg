@@ -392,26 +392,36 @@ let ghBusy  = false;
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// 읽기 — 토큰 불필요, 누구나 자동 로드
+// 읽기 — GitHub Contents API 사용 (캐시 없음, 항상 최신)
 async function ghLoad(){
   try{
-    const r = await fetch(GH_RAW + '?t=' + Date.now()); // 캐시 방지
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+      {headers:{'Accept':'application/vnd.github+json','Cache-Control':'no-cache'}}
+    );
     if(!r.ok) return;
-    const j = await r.json();
+    const d = await r.json();
+    if(!d.content) return;
+    // GitHub API는 base64(UTF-8) 인코딩 반환 → 한글 안전 디코딩
+    const bytes = atob(d.content.replace(/\n/g,''));
+    const uint8 = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) uint8[i]=bytes.charCodeAt(i);
+    const j = JSON.parse(new TextDecoder().decode(uint8));
+
     if(j.videos) Object.entries(j.videos).forEach(([lid,v])=>{const l=allLessons().find(x=>x.id===lid);if(l)l.videos=v;});
     if(j.scores) Object.entries(j.scores).forEach(([lid,u])=>{const l=allLessons().find(x=>x.id===lid);if(l)l._gd=u;});
     if(j.titles) Object.entries(j.titles).forEach(([lid,t])=>{const l=allLessons().find(x=>x.id===lid);if(l)l.title=t;});
-    if(j.extraCourses && Array.isArray(j.extraCourses)){
+    if(j.extraCourses&&Array.isArray(j.extraCourses)){
       j.extraCourses.forEach(ec=>{
         if(!CUR.find(c=>c.id===ec.id)){
           CUR.push({
-            id:ec.id, title:ec.title, label:ec.label||'', sub:ec.sub||'',
-            playlist:{title:ec.title, channel:'', url:'', dur:'재생목록'},
+            id:ec.id,title:ec.title,label:ec.label||'',sub:ec.sub||'',
+            playlist:{title:ec.title,channel:'',url:'',dur:'재생목록'},
             lessons:(ec.lessons||[]).map(l=>({
-              id:l.id, title:l.title, desc:'',
+              id:l.id,title:l.title,desc:'',
               explain:'선생님이 내용을 추가해 주세요.',
               points:['내용을 입력해 주세요'],
-              score:null, scoreCaption:'', videos:[], practice:['연습 내용을 입력해 주세요']
+              score:null,scoreCaption:'',videos:[],practice:['연습 내용을 입력해 주세요']
             }))
           });
         }
