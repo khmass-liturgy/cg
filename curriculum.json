@@ -1,5 +1,14 @@
 {
-  "videos": {},
+  "videos": {
+    "c1l1": [
+      {
+        "title": "기타의 구조와 명칭",
+        "channel": "",
+        "url": "https://youtu.be/r3Vy_Ld_g60?si=lGzRDuXdrV2GKT0m",
+        "dur": "11분"
+      }
+    ]
+  },
   "scores": {},
   "titles": {
     "c1l1": "기타의 명칭, 손가락 및 줄 번호, 연주자세, 주법",
