@@ -476,26 +476,20 @@ async function ghSave(){
   finally{ ghBusy=false; renderMgr(); }
 }
 
-async function connectGh(){
-  const t = document.getElementById('gh-tok')?.value.trim()||'';
-  const err = document.getElementById('gh-err');
-  if(!t){if(err)err.textContent='토큰을 입력해 주세요.'; return;}
-  if(err)err.textContent='확인 중...';
-  try{
-    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`, {
-      headers:{'Authorization':'token '+t, 'Accept':'application/vnd.github+json'}
-    });
-    if(!r.ok) throw new Error('저장소 접근 불가 — repo 권한을 확인해 주세요.');
-    ghToken = t;
-    localStorage.setItem('kg_gh_token', ghToken);
-    if(err) err.textContent='';
-    renderMgr();
-  }catch(e){if(err) err.textContent='✗ '+e.message;}
+// 토큰 입력과 동시에 저장 — 연결 과정 없음
+async function saveWithToken(){
+  const inp=document.getElementById('gh-tok');
+  const t=inp?inp.value.trim():'';
+  const err=document.getElementById('gh-err');
+  if(!t){if(err)err.textContent='토큰을 입력해 주세요.';return;}
+  ghToken=t;
+  localStorage.setItem('kg_gh_token',ghToken);
+  await ghSave();
 }
 
-function disconnectGh(){
-  if(!confirm('토큰 연결을 해제할까요?\n(읽기는 계속 유지됩니다)')) return;
-  ghToken = '';
+function clearToken(){
+  if(!confirm('저장 토큰을 초기화할까요?'))return;
+  ghToken='';
   localStorage.removeItem('kg_gh_token');
   renderMgr();
 }
@@ -699,34 +693,24 @@ function renderMgr(){
   const lesson=allLessons().find(l=>l.id===mgrLid);
   const vids=lesson?lesson.videos||[]:[];
 
-  // GitHub JSON 카드
-  const ghCard = ghToken
-    ? `<div class="card ok">
-        <div class="card-t">✓ GitHub 저장소 연결됨</div>
-        <div class="url-mono">${GH_RAW}</div>
-        <div class="row">
-          <button class="b-sage" onclick="ghSave()" ${ghBusy?'disabled':''}>${ghBusy?'저장 중…':'💾 JSON 저장 (회원 반영)'}</button>
-          <a href="https://github.com/${GH_OWNER}/${GH_REPO}/blob/main/${GH_FILE}" target="_blank"
-             style="font-size:12.5px;color:var(--sky)">파일 보기 ↗</a>
-          <button class="b-ghost" onclick="disconnectGh()">연결 해제</button>
-        </div>
-        <div style="font-size:12px;color:var(--sage);margin-top:8px;line-height:1.6">
-          💡 저장하면 <b>curriculum.json</b>이 업데이트되어 모든 회원에게 자동 반영됩니다
-        </div>
-      </div>`
-    : `<div class="card">
-        <div class="card-t">💾 GitHub 저장소 연결</div>
-        <div class="hint-box">
-          강좌를 저장하면 <b>curriculum.json</b>에 자동 저장되어 모든 회원 화면에 반영됩니다.<br>
-          기존 <b>repo 권한</b> 토큰을 그대로 사용하시면 됩니다.
-          <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" style="color:var(--sky)">새 토큰 발급 ↗</a>
-        </div>
-        <div class="row">
-          <input class="in mono" id="gh-tok" type="password" placeholder="ghp_ 로 시작하는 토큰 (repo 권한)">
-          <button class="b-gold" onclick="connectGh()">연결</button>
-        </div>
-        <div id="gh-err" class="msg err"></div>
-      </div>`;
+  // 심플 저장 바 — 토큰 입력 한 번이면 끝
+  const saveBar = `
+    <div style="background:${ghToken?'var(--sage-soft)':'var(--paper)'};border:1px solid ${ghToken?'var(--sage-line)':'var(--line)'};border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;color:${ghToken?'var(--sage)':'var(--ink3)'};font-weight:500;white-space:nowrap">
+        ${ghToken?'✓ 자동저장 준비됨':'💾 저장 토큰'}
+      </span>
+      ${ghToken
+        ? `<button class="b-sage" onclick="ghSave()" ${ghBusy?'disabled':''} style="padding:7px 18px;font-size:13.5px">
+             ${ghBusy?'저장 중…':'💾 지금 저장 (모든 회원 반영)'}
+           </button>
+           <a href="https://github.com/${GH_OWNER}/${GH_REPO}/blob/main/${GH_FILE}" target="_blank"
+              style="font-size:12px;color:var(--sky)">파일 확인 ↗</a>
+           <button class="b-ghost" onclick="clearToken()" style="font-size:12px;padding:5px 10px;margin-left:auto">토큰 초기화</button>`
+        : `<input class="in mono" id="gh-tok" type="password" placeholder="ghp_ 토큰 입력 후 저장" style="flex:1;min-width:200px">
+           <button class="b-gold" onclick="saveWithToken()" style="padding:7px 16px;font-size:13.5px;white-space:nowrap">💾 저장</button>
+           <div id="gh-err" class="msg err" style="width:100%;margin:0"></div>`
+      }
+    </div>`;
 
   // 탭 메뉴
   const tabs=`
@@ -865,7 +849,7 @@ function renderMgr(){
         <button class="back-btn" onclick="hideMgr()">← 돌아가기</button>
         <h2>강좌 관리</h2>
       </div>
-      ${ghCard}
+      ${saveBar}
       ${tabs}
       ${mgrTab==='video'?tabVideo:mgrTab==='rename'?tabRename:tabCourse}
     </div>`;
