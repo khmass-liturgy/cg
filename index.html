@@ -399,9 +399,13 @@ async function ghLoad(){
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
       {headers:{'Accept':'application/vnd.github+json','Cache-Control':'no-cache'}}
     );
-    if(!r.ok) return;
+    if(!r.ok){
+      // 파일이 없으면(404) 조용히 무시 — 첫 저장 전 정상 상태
+      if(r.status!==404) console.warn('curriculum.json 로드 실패:', r.status);
+      return false;
+    }
     const d = await r.json();
-    if(!d.content) return;
+    if(!d.content) return false;
     // GitHub API는 base64(UTF-8) 인코딩 반환 → 한글 안전 디코딩
     const bytes = atob(d.content.replace(/\n/g,''));
     const uint8 = new Uint8Array(bytes.length);
@@ -427,7 +431,11 @@ async function ghLoad(){
         }
       });
     }
-  }catch(e){}
+    return true; // 로드 성공
+  }catch(e){
+    console.error('curriculum.json 로드 오류:', e);
+    return false;
+  }
 }
 
 // 쓰기 — repo 토큰 필요 (선생님만)
@@ -965,9 +973,12 @@ function deleteCourse(ci){
 // ── 초기화 ──
 async function init(){
   renderHome();
-  // GitHub 저장소 curriculum.json에서 최신 데이터 자동 로드
-  await ghLoad();
-  renderHome();
+  // curriculum.json 로드 시도
+  const loaded = await ghLoad();
+  if(loaded){
+    renderHome();
+    if(curLesson) renderDetail(curLesson);
+  }
 }
 init();
 </script>
