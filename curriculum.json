@@ -2,33 +2,97 @@
   "videos": {
     "c1l1": [
       {
-        "title": "기타의 구조와 명칭",
-        "channel": "",
-        "url": "https://youtu.be/r3Vy_Ld_g60?si=lGzRDuXdrV2GKT0m",
+        "title": "왕초보 클래식기타 1강 기타의 명칭, 손가락 및 줄 번호, 연주자세, 주법",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/r3Vy_Ld_g60?si=sy2pzzeUCI0VTumQ",
         "dur": "11분"
       }
     ],
     "c1l2": [
       {
-        "title": "조율법",
-        "channel": "",
-        "url": "https://youtu.be/dIP0DSjYcnQ?si=sRGI8R04uWYswrlm",
+        "title": "왕초보 클래식기타 2강 조율법",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/dIP0DSjYcnQ?si=nKP7D_zaqNHx57sD",
         "dur": "6분"
       }
     ],
     "c1l3": [
       {
-        "title": "개방현 탄현연습",
-        "channel": "",
-        "url": "https://youtu.be/iNMLPiav_SQ?si=5j1jhL4jmmunXQTj",
+        "title": "왕초보 클래식기타 3강 개방현 탄현연습",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/iNMLPiav_SQ?si=STm-wQhcNkqKgHFg",
         "dur": "13분"
       }
     ],
     "c1l4": [
       {
-        "title": "1-3번줄 음계",
-        "channel": "",
-        "url": "https://youtu.be/iodMrOPvMKk?si=VoVF73QJj9RwZiJa",
+        "title": "왕초보 클래식기타 4강 왼손자세, 1 2 3번줄 음계",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/iodMrOPvMKk?si=C0osoWJGupXf7lIw",
+        "dur": "10분"
+      }
+    ],
+    "c1l5": [
+      {
+        "title": "왕초보 클래식기타 5강 음표와 쉼표, 멜로디연습",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/7nmZxGcpbDg?si=Gn-v7kT1e-RDTWI6",
+        "dur": "11분"
+      }
+    ],
+    "c1l6": [
+      {
+        "title": "왕초보 클래식기타 6강 멜로디연습(2)",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/DgCh-TPc_UI?si=SlVYf5DDineJXH9y",
+        "dur": "8분"
+      }
+    ],
+    "c1l7": [
+      {
+        "title": "왕초보 클래식기타 7강 왼손자세",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/5KNdFdg0K6w?si=gsBpdZKFfmIKOn8o",
+        "dur": "5분"
+      }
+    ],
+    "c1l8": [
+      {
+        "title": "왕초보 클래식기타 8강 4 5 6번줄 음계 배우기",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/UPdq01rjEqQ?si=2GKMx_lK2Pfi1Cek",
+        "dur": "5분"
+      }
+    ],
+    "c1l9": [
+      {
+        "title": "왕초보 클래식기타 9강 엄지(p)의 탄현법, 4 5 6번줄 음계연습",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/iZX-GgxE-LE?si=wYMl0KoMgcz9pyb9",
+        "dur": "7분"
+      }
+    ],
+    "c1l10": [
+      {
+        "title": "왕초보 클래식기타 10강 음계연습곡(바위돌깨뜨려, 에델바이스)",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/MUgqXjmll8o?si=R49LJTlICNHl1kOk",
+        "dur": "9분"
+      }
+    ],
+    "c1l11": [
+      {
+        "title": "왕초보 클래식기타 11강 기타음계의 원리(1)",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/quMtblSvUeE?si=dWcgd3_u4fqDXHLn",
+        "dur": "8분"
+      }
+    ],
+    "c1l12": [
+      {
+        "title": "왕초보 클래식기타 12강 기타음계의 원리(2)",
+        "channel": "똑바로뮤직스쿨",
+        "url": "https://youtu.be/HVhG-KTdk7M?si=olDv28uoVuYKn7EL",
         "dur": "10분"
       }
     ]
