@@ -716,7 +716,7 @@ function delGd(lid){
 // ── 강좌 관리 PIN 인증 (SHA-256 해시 방식) ──
 // 비밀번호를 바꾸려면 새 번호의 SHA-256 해시값으로 교체하세요
 // 해시 생성: https://emn178.github.io/online-tools/sha256.html
-const MGR_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa'; // 0525
+const MGR_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa';
 
 async function hashPin(pin){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
