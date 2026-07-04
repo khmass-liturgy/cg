@@ -213,10 +213,30 @@ main{max-width:980px;margin:0 auto;padding:26px 22px 60px}
     </div>
     <div class="head-right">
       <span class="prog-pill" id="progPill">진도 0 / 24</span>
-      <button class="mgr-link" onclick="showMgr()">⚙ 강좌 관리</button>
+      <button class="mgr-link" onclick="showMgr()">🔒 강좌 관리</button>
     </div>
   </div>
 </header>
+
+<!-- PIN 인증 오버레이 -->
+<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:rgba(33,28,20,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:var(--paper);border-radius:20px;padding:36px 32px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">🔒</div>
+    <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--wine);margin-bottom:6px">강좌 관리</div>
+    <div style="font-size:13.5px;color:var(--ink3);margin-bottom:24px">선생님 전용 메뉴입니다<br>비밀번호를 입력해 주세요</div>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="10"
+      style="width:100%;border:1.5px solid var(--line2);border-radius:10px;padding:13px 16px;font-size:18px;text-align:center;font-family:'Noto Sans KR',sans-serif;letter-spacing:6px;color:var(--ink);outline:none;box-sizing:border-box"
+      placeholder="● ● ● ●"
+      onkeydown="if(event.key==='Enter')checkPin()"
+      onfocus="this.style.borderColor='var(--wine)'"
+      onblur="this.style.borderColor='var(--line2)'">
+    <div id="pin-err" style="display:none;color:var(--wine);font-size:13px;margin-top:10px"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button onclick="cancelPin()" style="flex:1;padding:12px;border:1px solid var(--line2);border-radius:10px;background:none;font-size:14px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+      <button onclick="checkPin()" style="flex:2;padding:12px;border:none;border-radius:10px;background:var(--wine);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">확인</button>
+    </div>
+  </div>
+</div>
 
 <main>
   <div id="home"></div>
@@ -693,8 +713,52 @@ function delGd(lid){
   if(curLesson&&curLesson.id===lid)renderDetail(curLesson);
 }
 
-// ── 강좌 관리 ──
+// ── 강좌 관리 PIN 인증 (SHA-256 해시 방식) ──
+// 비밀번호를 바꾸려면 새 번호의 SHA-256 해시값으로 교체하세요
+// 해시 생성: https://emn178.github.io/online-tools/sha256.html
+const MGR_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa'; // 0525
+
+async function hashPin(pin){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 function showMgr(){
+  // 이미 인증된 세션이면 바로 진입
+  if(sessionStorage.getItem('mgr_auth')==='ok'){
+    _openMgr(); return;
+  }
+  // PIN 입력 화면 표시
+  document.getElementById('home').style.display='none';
+  document.getElementById('detail').style.display='none';
+  document.getElementById('mgr').style.display='none';
+  document.getElementById('pin-overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('pin-input')?.focus(), 100);
+}
+
+async function checkPin(){
+  const val = document.getElementById('pin-input')?.value||'';
+  if(!val) return;
+  const hashed = await hashPin(val);
+  if(hashed === MGR_HASH){
+    sessionStorage.setItem('mgr_auth','ok');
+    document.getElementById('pin-overlay').style.display='none';
+    _openMgr();
+  } else {
+    const err = document.getElementById('pin-err');
+    if(err){ err.textContent='비밀번호가 틀렸습니다.'; err.style.display='block'; }
+    document.getElementById('pin-input').value='';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function cancelPin(){
+  document.getElementById('pin-overlay').style.display='none';
+  document.getElementById('home').style.display='block';
+  renderHome();
+}
+
+function _openMgr(){
   mgrLid=mgrLid||CUR[0].lessons[0].id;
   mgrEdit=null; mgrTab='video';
   document.getElementById('home').style.display='none';
