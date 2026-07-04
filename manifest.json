@@ -1,0 +1,23 @@
+{
+  "name": "교하성당 클래식기타반",
+  "short_name": "기타반",
+  "description": "교하성당 클래식기타반 초급 과정",
+  "start_url": "/cg/",
+  "display": "standalone",
+  "background_color": "#faf8f3",
+  "theme_color": "#7a2e2e",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
