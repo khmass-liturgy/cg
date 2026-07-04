@@ -220,12 +220,97 @@ main{max-width:980px;margin:0 auto;padding:26px 22px 60px}
     </div>
     <div class="head-right">
       <span class="prog-pill" id="progPill">진도 0 / 24</span>
+      <button class="mgr-link" id="install-btn" onclick="showInstall()" style="display:none">📲 앱 설치</button>
       <button class="mgr-link" onclick="showMgr()">🔒 강좌 관리</button>
     </div>
   </div>
 </header>
 
-<!-- PIN 인증 오버레이 -->
+<!-- 앱 설치 안내 오버레이 -->
+<div id="install-overlay" style="display:none;position:fixed;inset:0;background:rgba(33,28,20,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:var(--paper);border-radius:20px;padding:32px 28px;width:min(400px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--wine)">📲 홈 화면에 추가</div>
+      <button onclick="closeInstall()" style="background:none;border:none;font-size:22px;color:var(--ink3);cursor:pointer;line-height:1">×</button>
+    </div>
+
+    <!-- 네이티브 설치 버튼 (Chrome/Android) -->
+    <div id="native-install" style="display:none;margin-bottom:18px">
+      <button onclick="nativeInstall()" style="width:100%;padding:14px;background:var(--wine);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">
+        📲 지금 바로 설치
+      </button>
+      <div style="font-size:12px;color:var(--ink3);text-align:center;margin-top:6px">Chrome에서 앱으로 설치할 수 있습니다</div>
+    </div>
+
+    <!-- 구분선 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <div style="font-size:12px;color:var(--ink3)">기기별 설치 방법</div>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+
+    <!-- 아이폰 -->
+    <div style="background:var(--sky-soft);border:1px solid var(--sky-line);border-radius:12px;padding:16px 18px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:var(--sky);margin-bottom:10px">🍎 아이폰 (Safari)</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sky);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</span>
+          <span>Safari에서 이 페이지 열기<br><span style="font-size:12px;color:var(--ink3)">Chrome이 아닌 Safari에서 접속해야 합니다</span></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sky);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</span>
+          <span>하단 가운데 <b>공유 버튼</b> 탭 <span style="font-size:16px">⬆</span></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sky);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">3</span>
+          <span><b>"홈 화면에 추가"</b> 선택 → <b>추가</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 안드로이드 -->
+    <div style="background:var(--sage-soft);border:1px solid var(--sage-line);border-radius:12px;padding:16px 18px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:var(--sage);margin-bottom:10px">🤖 안드로이드 (Chrome)</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sage);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</span>
+          <span>Chrome에서 이 페이지 열기</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sage);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</span>
+          <span>우측 상단 <b>메뉴 ⋮</b> 탭</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--sage);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">3</span>
+          <span><b>"앱 설치"</b> 또는 <b>"홈 화면에 추가"</b> 선택</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 데스크탑 -->
+    <div style="background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:12px;padding:16px 18px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:10px">💻 데스크탑 (Chrome)</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--gold);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">1</span>
+          <span>Chrome 주소창 오른쪽 <b>설치 아이콘</b> 클릭 <span style="font-size:15px">⊕</span></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)">
+          <span style="background:var(--gold);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">2</span>
+          <span><b>"설치"</b> 클릭 → 바탕화면에 앱 추가됨</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- URL 복사 -->
+    <div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--ink3);flex:1;word-break:break-all">khmass-liturgy.github.io/cg/</span>
+      <button onclick="copyUrl()" style="background:var(--wine-soft);color:var(--wine);border:1px solid var(--wine-line);border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap" id="copy-btn">복사</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="pin-overlay" style="display:none;position:fixed;inset:0;background:rgba(33,28,20,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
   <div style="background:var(--paper);border-radius:20px;padding:36px 32px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center">
     <div style="font-size:36px;margin-bottom:12px">🔒</div>
@@ -720,7 +805,60 @@ function delGd(lid){
   if(curLesson&&curLesson.id===lid)renderDetail(curLesson);
 }
 
-// ── 강좌 관리 PIN 인증 (SHA-256 해시 방식) ──
+// ── 앱 설치 ──
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 설치 버튼 표시
+  const btn = document.getElementById('install-btn');
+  if(btn) btn.style.display = 'inline-flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if(btn) btn.style.display = 'none';
+});
+
+function showInstall(){
+  document.getElementById('install-overlay').style.display = 'flex';
+  // 네이티브 설치 가능하면 버튼 표시
+  if(deferredPrompt){
+    document.getElementById('native-install').style.display = 'block';
+  }
+}
+
+function closeInstall(){
+  document.getElementById('install-overlay').style.display = 'none';
+}
+
+async function nativeInstall(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if(outcome === 'accepted') closeInstall();
+  deferredPrompt = null;
+}
+
+function copyUrl(){
+  const url = 'https://khmass-liturgy.github.io/cg/';
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn = document.getElementById('copy-btn');
+    if(btn){ btn.textContent='✓ 복사됨'; setTimeout(()=>btn.textContent='복사',1500); }
+  }).catch(()=>{
+    prompt('주소 복사:', url);
+  });
+}
+
+// 이미 설치된 앱으로 실행 중이면 버튼 숨기기
+if(window.matchMedia('(display-mode: standalone)').matches){
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const btn = document.getElementById('install-btn');
+    if(btn) btn.style.display = 'none';
+  });
+}
 // 비밀번호를 바꾸려면 새 번호의 SHA-256 해시값으로 교체하세요
 // 해시 생성: https://emn178.github.io/online-tools/sha256.html
 const MGR_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa';
