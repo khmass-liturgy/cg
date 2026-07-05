@@ -191,6 +191,14 @@
         "url": "https://youtu.be/lwEpqrL9-sY?si=kd9XKUS2WUOP5BO3",
         "dur": "9분"
       }
+    ],
+    "c3l1": [
+      {
+        "title": "제1부 기초연습(개방현 연습)",
+        "channel": "",
+        "url": "https://youtu.be/zJVklx6SuEE?si=eYUnu9WAWUHbrMRS",
+        "dur": "20분"
+      }
     ]
   },
   "scores": {},
@@ -218,7 +226,21 @@
     "c2l9": "아르페지오(1) 패턴1~2",
     "c2l10": "아르페지오(2) 패턴3~5",
     "c2l11": "아르페지오(3) 패턴6~8",
-    "c2l12": "아르페지오(4) 패턴9,10 / 총연습"
+    "c2l12": "아르페지오(4) 패턴9,10 / 총연습",
+    "c3l1": "제1부 기초연습(개방현연습,포지션연습)"
   },
-  "extraCourses": []
+  "extraCourses": [
+    {
+      "id": "c3",
+      "title": "카르카시기타교본 배우기",
+      "label": "초급 Ⅲ",
+      "sub": "86강",
+      "lessons": [
+        {
+          "id": "c3l1",
+          "title": "제1부 기초연습(개방현연습,포지션연습)"
+        }
+      ]
+    }
+  ]
 }
