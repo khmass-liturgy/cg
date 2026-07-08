@@ -334,6 +334,7 @@ main{max-width:980px;margin:0 auto;padding:26px 22px 60px}
   <div id="home"></div>
   <div id="detail" style="display:none"></div>
   <div id="mgr" style="display:none"></div>
+  <div id="board-section"></div>
 </main>
 
 <script>
@@ -3419,11 +3420,15 @@ const CUR=[
 const GH_OWNER = 'khmass-liturgy';
 const GH_REPO  = 'cg';
 const GH_FILE  = 'curriculum.json';
+const GH_BOARD = 'board.json';
 const GH_RAW   = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_FILE}`;
 const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+const GH_BOARD_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_BOARD}`;
 
 let ghToken = localStorage.getItem('kg_gh_token') || '';
 let ghBusy  = false;
+let boardPosts = [];
+let boardWriteMode = false;
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -4103,15 +4108,180 @@ function deleteCourse(ci){
   renderHome();
 }
 
-// ── 초기화 ──
+// ── 메모 / Q&A 게시판 ──
+
+// 게시판 로드
+async function boardLoad(){
+  try{
+    const headers = {'Accept':'application/vnd.github+json','Cache-Control':'no-cache'};
+    if(ghToken) headers['Authorization']='token '+ghToken;
+    const r = await fetch(GH_BOARD_API, {headers});
+    if(!r.ok) return;
+    const d = await r.json();
+    if(!d.content) return;
+    const bytes = atob(d.content.replace(/\n/g,''));
+    const uint8 = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) uint8[i]=bytes.charCodeAt(i);
+    const j = JSON.parse(new TextDecoder().decode(uint8));
+    if(j.posts) boardPosts = j.posts;
+  }catch(e){}
+}
+
+// 게시판 저장
+async function boardSave(){
+  if(!ghToken){alert('저장 토큰이 없습니다.\n강좌 관리에서 토큰을 입력해 주세요.');return;}
+  try{
+    const content = JSON.stringify({posts: boardPosts}, null, 2);
+    const bytes = new TextEncoder().encode(content);
+    let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b));
+    const encoded = btoa(bin);
+    let sha=null;
+    try{
+      const gr = await fetch(GH_BOARD_API,{headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'}});
+      if(gr.ok){const gd=await gr.json();sha=gd.sha;}
+    }catch(e){}
+    const body={message:'Update board '+new Date().toISOString().slice(0,16),content:encoded,...(sha?{sha}:{})};
+    const r = await fetch(GH_BOARD_API,{method:'PUT',headers:{'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('저장 실패('+r.status+')');
+  }catch(e){alert('게시판 저장 오류: '+e.message);}
+}
+
+// 게시물 작성
+async function boardSubmit(){
+  const author  = document.getElementById('bd-author')?.value.trim()||'익명';
+  const content = document.getElementById('bd-content')?.value.trim()||'';
+  const cid     = document.getElementById('bd-course')?.value||'';
+  const lid     = document.getElementById('bd-lesson')?.value||'';
+  if(!content){alert('내용을 입력해 주세요.');return;}
+  const lesson  = allLessons().find(l=>l.id===lid);
+  const course  = CUR.find(c=>c.id===cid);
+  const post = {
+    id: Date.now().toString(),
+    courseId: cid,
+    courseTitle: course?.title||'',
+    lessonId: lid,
+    lessonTitle: lesson?.title||'(과정 전체)',
+    author,
+    content,
+    createdAt: new Date().toISOString()
+  };
+  boardPosts.unshift(post);
+  await boardSave();
+  boardWriteMode = false;
+  renderBoard();
+  document.getElementById('board-section')?.scrollIntoView({behavior:'smooth'});
+}
+
+// 게시물 삭제 (토큰 있을 때만)
+async function boardDelete(id){
+  if(!confirm('이 게시물을 삭제할까요?'))return;
+  boardPosts = boardPosts.filter(p=>p.id!==id);
+  await boardSave();
+  renderBoard();
+}
+
+// 강좌 선택 시 레슨 목록 업데이트
+function boardCourseChange(){
+  const cid = document.getElementById('bd-course')?.value||'';
+  const course = CUR.find(c=>c.id===cid);
+  const sel = document.getElementById('bd-lesson');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— 과정 전체</option>'
+    + (course?.lessons||[]).map(l=>`<option value="${l.id}">${esc(l.title)}</option>`).join('');
+}
+
+// 날짜 포맷
+function fmtDate(iso){
+  try{
+    const d=new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }catch(e){return '';}
+}
+
+// 게시판 렌더링
+function renderBoard(){
+  const el = document.getElementById('board-section');
+  if(!el) return;
+
+  // 과정 옵션
+  const courseOpts = CUR.map(c=>`<option value="${c.id}">${esc(c.title)}</option>`).join('');
+
+  // 글쓰기 폼
+  const writeForm = boardWriteMode ? `
+    <div style="background:var(--sky-soft);border:1.5px solid var(--sky-line);border-radius:14px;padding:20px 22px;margin-bottom:18px">
+      <div style="font-size:14px;font-weight:700;color:var(--sky);margin-bottom:14px">✏ 새 메모 / 질문 작성</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:12px;color:var(--ink2);font-weight:500;display:block;margin-bottom:4px">이름 (선택)</label>
+          <input id="bd-author" class="in" placeholder="익명" style="width:100%;padding:9px 12px;font-size:14px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ink2);font-weight:500;display:block;margin-bottom:4px">관련 과정</label>
+          <select id="bd-course" class="in" style="width:100%;padding:9px 12px;font-size:14px" onchange="boardCourseChange()">
+            <option value="">— 선택 안함</option>
+            ${courseOpts}
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:var(--ink2);font-weight:500;display:block;margin-bottom:4px">관련 강의 (선택)</label>
+        <select id="bd-lesson" class="in" style="width:100%;padding:9px 12px;font-size:14px">
+          <option value="">— 과정 전체</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:var(--ink2);font-weight:500;display:block;margin-bottom:4px">내용 *</label>
+        <textarea id="bd-content" style="width:100%;border:1px solid var(--line2);border-radius:9px;padding:11px 14px;font-size:14px;font-family:'Noto Sans KR',sans-serif;color:var(--ink);resize:vertical;min-height:90px;box-sizing:border-box;background:var(--paper)" placeholder="질문이나 메모를 입력하세요..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="boardSubmit()" style="flex:1;padding:11px;background:var(--sky);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">등록</button>
+        <button onclick="boardWriteMode=false;renderBoard()" style="padding:11px 18px;background:none;border:1px solid var(--line2);border-radius:9px;font-size:14px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+      </div>
+    </div>` : '';
+
+  // 게시글 목록
+  const postList = boardPosts.length === 0
+    ? `<div style="text-align:center;padding:36px 20px;color:var(--ink3);background:var(--bg);border-radius:12px;border:1px dashed var(--line2)">
+        <div style="font-size:28px;margin-bottom:8px">📝</div>
+        <div style="font-size:14px">아직 게시글이 없습니다<br>첫 메모를 남겨보세요!</div>
+      </div>`
+    : boardPosts.map(p=>`
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+          <div>
+            ${p.courseTitle?`<span style="font-size:11.5px;background:var(--wine-soft);color:var(--wine);border:1px solid var(--wine-line);border-radius:20px;padding:3px 10px;font-weight:500">${esc(p.courseTitle)}</span>`:''}
+            ${p.lessonTitle?`<span style="font-size:11.5px;color:var(--ink3);margin-left:6px">${esc(p.lessonTitle)}</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-size:11.5px;color:var(--ink3)">${fmtDate(p.createdAt)}</span>
+            ${ghToken?`<button onclick="boardDelete('${p.id}')" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 4px" title="삭제">🗑</button>`:''}
+          </div>
+        </div>
+        <div style="font-size:14.5px;color:var(--ink);line-height:1.7;white-space:pre-wrap">${esc(p.content)}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:8px;text-align:right">— ${esc(p.author||'익명')}</div>
+      </div>`).join('');
+
+  el.innerHTML = `
+    <div style="max-width:980px;margin:0 auto;padding:0 22px 60px">
+      <div style="border-top:2px solid var(--line);margin:32px 0 24px;padding-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--ink)">📝 메모 · Q&amp;A</div>
+          <div style="font-size:13px;color:var(--ink3);margin-top:3px">강좌에 대한 질문이나 메모를 남겨보세요</div>
+        </div>
+        ${!boardWriteMode?`<button onclick="boardWriteMode=true;renderBoard()" style="background:var(--sky);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">✏ 메모 쓰기</button>`:''}
+      </div>
+      ${writeForm}
+      ${postList}
+    </div>`;
+}
+
+
 async function init(){
   renderHome();
-  // curriculum.json 로드 시도
   const loaded = await ghLoad();
-  if(loaded){
-    renderHome();
-    if(curLesson) renderDetail(curLesson);
-  }
+  if(loaded){ renderHome(); if(curLesson) renderDetail(curLesson); }
+  await boardLoad();
+  renderBoard();
 }
 init();
 </script>
