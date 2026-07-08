@@ -3430,6 +3430,13 @@ let ghToken = localStorage.getItem('kg_gh_token') || '';
 let ghBusy  = false;
 let boardPosts = [];
 let boardWriteMode = false;
+let boardEditId = null;   // 수정 중인 게시물 ID
+let boardShowAll = false; // 전체 보기 여부
+
+// 내가 쓴 글 ID 관리 (localStorage)
+function getMyPostIds(){ return JSON.parse(localStorage.getItem('my_board_posts')||'[]'); }
+function addMyPostId(id){ const ids=getMyPostIds(); ids.push(id); localStorage.setItem('my_board_posts',JSON.stringify(ids)); }
+function canModify(id){ return ghToken || getMyPostIds().includes(id); }
 
 // ── Firebase 초기화 ──
 const firebaseConfig = {
@@ -4146,17 +4153,17 @@ async function boardSubmit(){
   const btn = document.getElementById('bd-submit-btn');
   if(btn){btn.disabled=true;btn.textContent='등록 중...';}
   try{
-    await boardCol.add({
+    const ref = await boardCol.add({
       courseId:    cid,
       courseTitle: course?.title||'',
       lessonId:    lid,
       lessonTitle: lesson?.title||'',
       author,
       content,
-      createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    addMyPostId(ref.id); // 내가 쓴 글 기록
     boardWriteMode = false;
-    renderBoard();
     document.getElementById('board-section')?.scrollIntoView({behavior:'smooth'});
   }catch(e){
     alert('등록 실패: '+e.message);
@@ -4164,15 +4171,42 @@ async function boardSubmit(){
   }
 }
 
-// 게시물 삭제 (토큰 있는 선생님만)
+// 수정 모드 시작
+function boardEditMode(id){
+  boardEditId = id;
+  renderBoard();
+  setTimeout(()=>document.getElementById('bd-edit-'+id)?.focus(),100);
+}
+
+// 수정 저장
+async function boardUpdate(id){
+  const content = document.getElementById('bd-edit-'+id)?.value.trim()||'';
+  if(!content){alert('내용을 입력해 주세요.');return;}
+  const btn = document.getElementById('bd-edit-save-'+id);
+  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
+  try{
+    await boardCol.doc(id).update({
+      content,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    boardEditId = null;
+  }catch(e){
+    alert('수정 실패: '+e.message);
+    if(btn){btn.disabled=false;btn.textContent='저장';}
+  }
+}
+
+// 삭제
 async function boardDelete(id){
   if(!confirm('이 게시물을 삭제할까요?'))return;
   try{
     await boardCol.doc(id).delete();
+    // 내 글 목록에서도 제거
+    const ids = getMyPostIds().filter(i=>i!==id);
+    localStorage.setItem('my_board_posts', JSON.stringify(ids));
   }catch(e){alert('삭제 실패: '+e.message);}
 }
 
-// 강좌 선택 시 레슨 목록 업데이트
 function boardCourseChange(){
   const cid = document.getElementById('bd-course')?.value||'';
   const course = CUR.find(c=>c.id===cid);
@@ -4182,7 +4216,6 @@ function boardCourseChange(){
     + (course?.lessons||[]).map(l=>`<option value="${l.id}">${esc(l.title)}</option>`).join('');
 }
 
-// 날짜 포맷
 function fmtDate(ts){
   try{
     const d = ts?.toDate ? ts.toDate() : new Date(ts);
@@ -4190,13 +4223,12 @@ function fmtDate(ts){
   }catch(e){return '';}
 }
 
-// 게시판 렌더링
 function renderBoard(){
   const el = document.getElementById('board-section');
   if(!el) return;
-
   const courseOpts = CUR.map(c=>`<option value="${c.id}">${esc(c.title)}</option>`).join('');
 
+  // 글쓰기 폼
   const writeForm = boardWriteMode ? `
     <div style="background:var(--sky-soft);border:1.5px solid var(--sky-line);border-radius:14px;padding:20px 22px;margin-bottom:18px">
       <div style="font-size:14px;font-weight:700;color:var(--sky);margin-bottom:14px">✏ 새 메모 / 질문 작성</div>
@@ -4208,8 +4240,7 @@ function renderBoard(){
         <div>
           <label style="font-size:12px;color:var(--ink2);font-weight:500;display:block;margin-bottom:4px">관련 과정</label>
           <select id="bd-course" class="in" style="width:100%;padding:9px 12px;font-size:14px" onchange="boardCourseChange()">
-            <option value="">— 선택 안함</option>
-            ${courseOpts}
+            <option value="">— 선택 안함</option>${courseOpts}
           </select>
         </div>
       </div>
@@ -4229,26 +4260,59 @@ function renderBoard(){
       </div>
     </div>` : '';
 
+  // 게시글 목록 (5개 제한)
+  const LIMIT = 5;
+  const visible = boardShowAll ? boardPosts : boardPosts.slice(0, LIMIT);
+  const remaining = boardPosts.length - LIMIT;
+
   const postList = boardPosts.length === 0
     ? `<div style="text-align:center;padding:36px 20px;color:var(--ink3);background:var(--bg);border-radius:12px;border:1px dashed var(--line2)">
         <div style="font-size:28px;margin-bottom:8px">📝</div>
         <div style="font-size:14px">아직 게시글이 없습니다<br>첫 메모를 남겨보세요!</div>
       </div>`
-    : boardPosts.map(p=>`
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            ${p.courseTitle?`<span style="font-size:11.5px;background:var(--wine-soft);color:var(--wine);border:1px solid var(--wine-line);border-radius:20px;padding:3px 10px;font-weight:500">${esc(p.courseTitle)}</span>`:''}
-            ${p.lessonTitle?`<span style="font-size:12px;color:var(--ink3)">${esc(p.lessonTitle)}</span>`:''}
+    : visible.map(p => {
+        const isEditing = boardEditId === p.id;
+        const canMod = canModify(p.id);
+        return `
+        <div style="background:var(--paper);border:1px solid ${isEditing?'var(--sky-line)':'var(--line)'};border-radius:12px;padding:16px 18px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              ${p.courseTitle?`<span style="font-size:11.5px;background:var(--wine-soft);color:var(--wine);border:1px solid var(--wine-line);border-radius:20px;padding:3px 10px;font-weight:500">${esc(p.courseTitle)}</span>`:''}
+              ${p.lessonTitle?`<span style="font-size:12px;color:var(--ink3)">${esc(p.lessonTitle)}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span style="font-size:11.5px;color:var(--ink3)">${fmtDate(p.createdAt)}</span>
+              ${p.updatedAt?`<span style="font-size:11px;color:var(--ink3)">(수정됨)</span>`:''}
+              ${canMod&&!isEditing?`
+                <button data-id="${p.id}" onclick="boardEditMode(this.dataset.id)"
+                  style="background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-line);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">수정</button>
+                <button data-id="${p.id}" onclick="boardDelete(this.dataset.id)"
+                  style="background:var(--wine-soft);color:var(--wine);border:1px solid var(--wine-line);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">삭제</button>`:''}
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span style="font-size:11.5px;color:var(--ink3)">${fmtDate(p.createdAt)}</span>
-            ${ghToken?`<button onclick="boardDelete('${p.id}')" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 5px" title="삭제">🗑</button>`:''}
-          </div>
-        </div>
-        <div style="font-size:14.5px;color:var(--ink);line-height:1.75;white-space:pre-wrap">${esc(p.content)}</div>
-        <div style="font-size:12px;color:var(--ink3);margin-top:8px;text-align:right">— ${esc(p.author||'익명')}</div>
-      </div>`).join('');
+          ${isEditing ? `
+            <textarea id="bd-edit-${p.id}" style="width:100%;border:1.5px solid var(--sky-line);border-radius:9px;padding:11px 14px;font-size:14px;font-family:'Noto Sans KR',sans-serif;color:var(--ink);resize:vertical;min-height:80px;box-sizing:border-box;background:var(--sky-soft)">${esc(p.content)}</textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="bd-edit-save-${p.id}" data-id="${p.id}" onclick="boardUpdate(this.dataset.id)"
+                style="padding:8px 18px;background:var(--sky);color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">저장</button>
+              <button onclick="boardEditId=null;renderBoard()"
+                style="padding:8px 14px;background:none;border:1px solid var(--line2);border-radius:8px;font-size:13.5px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+            </div>` :
+            `<div style="font-size:14.5px;color:var(--ink);line-height:1.75;white-space:pre-wrap">${esc(p.content)}</div>`
+          }
+          <div style="font-size:12px;color:var(--ink3);margin-top:8px;text-align:right">— ${esc(p.author||'익명')}</div>
+        </div>`;
+      }).join('')
+    + (!boardShowAll && remaining > 0 ? `
+      <button onclick="boardShowAll=true;renderBoard()"
+        style="width:100%;padding:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--ink2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:4px">
+        📋 게시글 더 보기 (${remaining}개 남음)
+      </button>` : '')
+    + (boardShowAll && boardPosts.length > LIMIT ? `
+      <button onclick="boardShowAll=false;renderBoard()"
+        style="width:100%;padding:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:4px">
+        ▲ 접기
+      </button>` : '');
 
   el.innerHTML = `
     <div style="max-width:980px;margin:0 auto;padding:0 22px 60px">
@@ -4257,20 +4321,22 @@ function renderBoard(){
           <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--ink)">📝 메모 · Q&amp;A</div>
           <div style="font-size:13px;color:var(--ink3);margin-top:3px">강좌에 대한 질문이나 메모를 남겨보세요 · 실시간 반영</div>
         </div>
-        ${!boardWriteMode?`<button onclick="boardWriteMode=true;renderBoard()" style="background:var(--sky);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">✏ 메모 쓰기</button>`:''}
+        ${!boardWriteMode?`<button onclick="boardWriteMode=true;renderBoard()"
+          style="background:var(--sky);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">✏ 메모 쓰기</button>`:''}
       </div>
       ${writeForm}
-      <div id="board-posts">${postList}</div>
+      ${postList}
     </div>`;
 }
 
 
+// ── 초기화 ──
 async function init(){
   renderHome();
   const loaded = await ghLoad();
   if(loaded){ renderHome(); if(curLesson) renderDetail(curLesson); }
-  renderBoard(); // 초기 렌더
-  boardInit();   // Firebase 실시간 리스너
+  renderBoard();
+  boardInit();
 }
 init();
 </script>
