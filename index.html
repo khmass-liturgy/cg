@@ -3829,7 +3829,7 @@ if(window.matchMedia('(display-mode: standalone)').matches){
 }
 // 비밀번호를 바꾸려면 새 번호의 SHA-256 해시값으로 교체하세요
 // 해시 생성: https://emn178.github.io/online-tools/sha256.html
-const MGR_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa';
+const MGR_HASH = '862c605c3e625ff4c23a9632b34e4d22ded112c30639d87745a6522f36198c66';
 
 async function hashPin(pin){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
