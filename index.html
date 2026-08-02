@@ -3438,7 +3438,7 @@ const boardCol = db.collection('board');
 
 // 운영자로 인정할 구글 계정 이메일 목록 — 여기 없는 계정은 구글 로그인은 되어도 저장 권한이 없습니다.
 // (실제 저장 권한은 Cloud Function(saveCurriculum) 안에서도 동일하게 검사합니다)
-const ADMIN_EMAILS = ["trsumun@daum.net"];
+const ADMIN_EMAILS = ["trsumun@gmail.com"];
 
 // 선생님 로그인 상태 — 저장(GitHub 커밋)은 Cloud Function이 서버 측에서 처리하며
 // 여기서는 "허용된 구글 계정으로 로그인했는지"만 판단해 UI를 켜고 끔 (실제 쓰기 권한은 함수 안에서 재검증됨)
