@@ -207,6 +207,8 @@ main{max-width:980px;margin:0 auto;padding:26px 22px 60px}
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 </head>
 <body>
 
@@ -318,17 +320,14 @@ main{max-width:980px;margin:0 auto;padding:26px 22px 60px}
   <div style="background:var(--paper);border-radius:20px;padding:36px 32px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center">
     <div style="font-size:36px;margin-bottom:12px">🔒</div>
     <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--wine);margin-bottom:6px">강좌 관리</div>
-    <div style="font-size:13.5px;color:var(--ink3);margin-bottom:24px">선생님 전용 메뉴입니다<br>비밀번호를 입력해 주세요</div>
-    <input id="pin-input" type="password" inputmode="numeric" maxlength="10"
-      style="width:100%;border:1.5px solid var(--line2);border-radius:10px;padding:13px 16px;font-size:18px;text-align:center;font-family:'Noto Sans KR',sans-serif;letter-spacing:6px;color:var(--ink);outline:none;box-sizing:border-box"
-      placeholder="● ● ● ●"
-      onkeydown="if(event.key==='Enter')checkPin()"
-      onfocus="this.style.borderColor='var(--wine)'"
-      onblur="this.style.borderColor='var(--line2)'">
-    <div id="pin-err" style="display:none;color:var(--wine);font-size:13px;margin-top:10px"></div>
-    <div style="display:flex;gap:10px;margin-top:18px">
-      <button onclick="cancelPin()" style="flex:1;padding:12px;border:1px solid var(--line2);border-radius:10px;background:none;font-size:14px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
-      <button onclick="checkPin()" style="flex:2;padding:12px;border:none;border-radius:10px;background:var(--wine);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">확인</button>
+    <div style="font-size:13.5px;color:var(--ink3);margin-bottom:24px">선생님 전용 메뉴입니다<br>구글 계정으로 로그인해 주세요</div>
+    <button id="mgr-google-btn" onclick="mgrLogin()" style="width:100%;padding:13px;border:1.5px solid var(--line2);border-radius:10px;background:#fff;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:9px">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.6 6.1 29.6 4 24 4 15.9 4 8.9 8.5 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-2 14-5.4l-6.5-5.5c-2 1.5-4.6 2.5-7.5 2.5-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C8.9 39.5 15.9 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.7l6.5 5.5C41.4 36 44 30.5 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+      Google로 로그인
+    </button>
+    <div id="pin-err" style="display:none;color:var(--wine);font-size:13px;margin-top:12px"></div>
+    <div style="margin-top:18px">
+      <button onclick="mgrCancelLogin()" style="width:100%;padding:12px;border:1px solid var(--line2);border-radius:10px;background:none;font-size:14px;color:var(--ink3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
     </div>
   </div>
 </div>
@@ -3411,7 +3410,6 @@ const GH_FILE  = 'curriculum.json';
 const GH_RAW   = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_FILE}`;
 const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
 
-let ghToken = localStorage.getItem('kg_gh_token') || '';
 let ghBusy  = false;
 let boardPosts = [];
 let boardWriteMode = false;
@@ -3421,7 +3419,7 @@ let boardShowAll = false; // 전체 보기 여부
 // 내가 쓴 글 ID 관리 (localStorage)
 function getMyPostIds(){ return JSON.parse(localStorage.getItem('my_board_posts')||'[]'); }
 function addMyPostId(id){ const ids=getMyPostIds(); ids.push(id); localStorage.setItem('my_board_posts',JSON.stringify(ids)); }
-function canModify(id){ return ghToken || getMyPostIds().includes(id); }
+function canModify(id){ return isAdmin; } // 수정/삭제는 운영자만 — Firestore 규칙과 일치
 
 // ── Firebase 초기화 ──
 const firebaseConfig = {
@@ -3434,15 +3432,37 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
+const functions = firebase.functions();
 const boardCol = db.collection('board');
+
+// 운영자로 인정할 구글 계정 이메일 목록 — 여기 없는 계정은 구글 로그인은 되어도 저장 권한이 없습니다.
+// (실제 저장 권한은 Cloud Function(saveCurriculum) 안에서도 동일하게 검사합니다)
+const ADMIN_EMAILS = ["trsumun@daum.net"];
+
+// 선생님 로그인 상태 — 저장(GitHub 커밋)은 Cloud Function이 서버 측에서 처리하며
+// 여기서는 "허용된 구글 계정으로 로그인했는지"만 판단해 UI를 켜고 끔 (실제 쓰기 권한은 함수 안에서 재검증됨)
+let isAdmin = false;
+auth.onAuthStateChanged(function(user){
+  if(user && !ADMIN_EMAILS.includes((user.email||'').toLowerCase())){
+    // 허용되지 않은 구글 계정 — 로그인은 됐지만 운영자로 인정하지 않고 바로 로그아웃
+    const err = document.getElementById('pin-err');
+    if(err){ err.textContent = '이 구글 계정(' + user.email + ')은 운영자로 등록되어 있지 않습니다.'; err.style.display='block'; }
+    auth.signOut();
+    return;
+  }
+  isAdmin = !!user;
+  if(!isAdmin && document.getElementById('mgr').style.display==='block'){
+    hideMgr();
+  }
+});
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// 읽기 — 저장된 토큰 사용 (API 제한 5000회/시간으로 증가)
+// 읽기 — 공개 저장소이므로 토큰 없이 조회 (누구나 가능)
 async function ghLoad(){
   try{
     const headers = {'Accept':'application/vnd.github+json','Cache-Control':'no-cache'};
-    if(ghToken) headers['Authorization'] = 'token '+ghToken; // 토큰 있으면 인증
     const r = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
       {headers}
@@ -3485,8 +3505,9 @@ async function ghLoad(){
 }
 
 // 쓰기 — repo 토큰 필요 (선생님만)
+// 쓰기 — Cloud Function 경유 (GitHub 토큰은 서버(Functions)에만 존재, 브라우저에는 절대 내려오지 않음)
 async function ghSave(){
-  if(!ghToken){alert('토큰을 먼저 입력해 주세요.');return;}
+  if(!auth.currentUser){ alert('로그인이 필요합니다.'); showMgr(); return; }
   if(ghBusy) return;
   ghBusy = true; renderMgr();
   try{
@@ -3501,61 +3522,18 @@ async function ghSave(){
       id:c.id, title:c.title, label:c.label||'', sub:c.sub||'',
       lessons:c.lessons.map(l=>({id:l.id, title:l.title}))
     })) : [];
-    const content = JSON.stringify({videos, scores, titles, extraCourses}, null, 2);
 
-    // 현재 파일 SHA 조회 (업데이트 시 필수)
-    let sha = null;
-    try{
-      const getR = await fetch(GH_API, {
-        headers:{'Authorization':'token '+ghToken, 'Accept':'application/vnd.github+json'}
-      });
-      if(getR.ok){ const d=await getR.json(); sha=d.sha; }
-    }catch(e){}
+    const saveCurriculumFn = functions.httpsCallable('saveCurriculum');
+    await saveCurriculumFn({videos, scores, titles, extraCourses});
 
-    // Base64 인코딩 (UTF-8 안전)
-    const bytes = new TextEncoder().encode(content);
-    let bin = ''; bytes.forEach(b=>bin+=String.fromCharCode(b));
-    const encoded = btoa(bin);
-
-    // PUT — 파일 생성 또는 업데이트
-    const body = {
-      message: 'Update curriculum ' + new Date().toISOString().slice(0,16).replace('T',' '),
-      content: encoded,
-      ...(sha ? {sha} : {})
-    };
-    const r = await fetch(GH_API, {
-      method:'PUT',
-      headers:{'Authorization':'token '+ghToken, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    if(!r.ok){
-      const msg = r.status===404 ? '저장소를 찾을 수 없습니다.'
-                : r.status===401||r.status===403 ? '토큰 권한이 없습니다. repo scope를 확인해 주세요.'
-                : '저장 실패 ('+r.status+')';
-      throw new Error(msg);
-    }
-    localStorage.setItem('kg_gh_token', ghToken);
     alert('✓ 저장 완료!\ncurriculum.json이 업데이트됐습니다.\n모든 회원이 새로고침하면 최신 내용이 보입니다.');
-  }catch(e){ alert('저장 실패: '+e.message); }
+  }catch(e){
+    console.error(e);
+    var msg = (e && e.message) ? e.message : '알 수 없는 오류';
+    if(e && e.code === 'functions/unauthenticated') msg = '로그인이 필요합니다. 다시 로그인해주세요.';
+    alert('저장 실패: '+msg);
+  }
   finally{ ghBusy=false; renderMgr(); }
-}
-
-// 토큰 입력과 동시에 저장 — 연결 과정 없음
-async function saveWithToken(){
-  const inp=document.getElementById('gh-tok');
-  const t=inp?inp.value.trim():'';
-  const err=document.getElementById('gh-err');
-  if(!t){if(err)err.textContent='토큰을 입력해 주세요.';return;}
-  ghToken=t;
-  localStorage.setItem('kg_gh_token',ghToken);
-  await ghSave();
-}
-
-function clearToken(){
-  if(!confirm('저장 토큰을 초기화할까요?'))return;
-  ghToken='';
-  localStorage.removeItem('kg_gh_token');
-  renderMgr();
 }
 
 // ── 상태 ──
@@ -3827,48 +3805,52 @@ if(window.matchMedia('(display-mode: standalone)').matches){
     if(btn) btn.style.display = 'none';
   });
 }
-// 비밀번호를 바꾸려면 새 번호의 SHA-256 해시값으로 교체하세요
-// 해시 생성: https://emn178.github.io/online-tools/sha256.html
-const MGR_HASH = '862c605c3e625ff4c23a9632b34e4d22ded112c30639d87745a6522f36198c66';
-
-async function hashPin(pin){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
 function showMgr(){
-  // 이미 인증된 세션이면 바로 진입
-  if(sessionStorage.getItem('mgr_auth')==='ok'){
+  // 이미 로그인된 세션이면 바로 진입
+  if(auth.currentUser){
     _openMgr(); return;
   }
-  // PIN 입력 화면 표시
+  // 로그인 화면 표시
   document.getElementById('home').style.display='none';
   document.getElementById('detail').style.display='none';
   document.getElementById('mgr').style.display='none';
   document.getElementById('pin-overlay').style.display='flex';
-  setTimeout(()=>document.getElementById('pin-input')?.focus(), 100);
+  setTimeout(()=>document.getElementById('mgr-google-btn')?.focus(), 100);
 }
 
-async function checkPin(){
-  const val = document.getElementById('pin-input')?.value||'';
-  if(!val) return;
-  const hashed = await hashPin(val);
-  if(hashed === MGR_HASH){
-    sessionStorage.setItem('mgr_auth','ok');
+async function mgrLogin(){
+  const err = document.getElementById('pin-err');
+  if(err){ err.style.display='none'; err.textContent=''; }
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    const email = ((result.user && result.user.email) || '').toLowerCase();
+    if(!ADMIN_EMAILS.includes(email)){
+      await auth.signOut();
+      if(err){ err.textContent = '이 구글 계정(' + email + ')은 운영자로 등록되어 있지 않습니다.'; err.style.display='block'; }
+      return;
+    }
     document.getElementById('pin-overlay').style.display='none';
     _openMgr();
-  } else {
-    const err = document.getElementById('pin-err');
-    if(err){ err.textContent='비밀번호가 틀렸습니다.'; err.style.display='block'; }
-    document.getElementById('pin-input').value='';
-    document.getElementById('pin-input').focus();
+  }catch(e){
+    console.error('로그인 오류:', e);
+    if(e && e.code === 'auth/popup-closed-by-user') return; // 사용자가 취소한 경우는 조용히 무시
+    let msg = '구글 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.';
+    if(e && e.code === 'auth/popup-blocked') msg = '팝업이 차단되었습니다. 브라우저의 팝업 차단을 해제해주세요.';
+    if(e && e.code === 'auth/unauthorized-domain') msg = '이 도메인은 구글 로그인이 허용되지 않았습니다. Firebase 콘솔의 승인된 도메인 목록을 확인해주세요.';
+    if(err){ err.textContent = msg; err.style.display='block'; }
   }
 }
 
-function cancelPin(){
+function mgrCancelLogin(){
   document.getElementById('pin-overlay').style.display='none';
   document.getElementById('home').style.display='block';
   renderHome();
+}
+
+function mgrLogout(){
+  auth.signOut();
+  hideMgr();
 }
 
 function _openMgr(){
@@ -3888,23 +3870,18 @@ function renderMgr(){
   const lesson=allLessons().find(l=>l.id===mgrLid);
   const vids=lesson?lesson.videos||[]:[];
 
-  // 심플 저장 바 — 토큰 입력 한 번이면 끝
+  // 심플 저장 바 — 로그인 상태면 바로 저장, 실제 GitHub 커밋은 Cloud Function이 서버에서 처리
   const saveBar = `
-    <div style="background:${ghToken?'var(--sage-soft)':'var(--paper)'};border:1px solid ${ghToken?'var(--sage-line)':'var(--line)'};border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-size:13px;color:${ghToken?'var(--sage)':'var(--ink3)'};font-weight:500;white-space:nowrap">
-        ${ghToken?'✓ 자동저장 준비됨':'💾 저장 토큰'}
+    <div style="background:var(--sage-soft);border:1px solid var(--sage-line);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--sage);font-weight:500;white-space:nowrap">
+        👤 ${esc(auth.currentUser ? auth.currentUser.email : '')}
       </span>
-      ${ghToken
-        ? `<button class="b-sage" onclick="ghSave()" ${ghBusy?'disabled':''} style="padding:7px 18px;font-size:13.5px">
-             ${ghBusy?'저장 중…':'💾 지금 저장 (모든 회원 반영)'}
-           </button>
-           <a href="https://github.com/${GH_OWNER}/${GH_REPO}/blob/main/${GH_FILE}" target="_blank"
-              style="font-size:12px;color:var(--sky)">파일 확인 ↗</a>
-           <button class="b-ghost" onclick="clearToken()" style="font-size:12px;padding:5px 10px;margin-left:auto">토큰 초기화</button>`
-        : `<input class="in mono" id="gh-tok" type="password" placeholder="ghp_ 토큰 입력 후 저장" style="flex:1;min-width:200px">
-           <button class="b-gold" onclick="saveWithToken()" style="padding:7px 16px;font-size:13.5px;white-space:nowrap">💾 저장</button>
-           <div id="gh-err" class="msg err" style="width:100%;margin:0"></div>`
-      }
+      <button class="b-sage" onclick="ghSave()" ${ghBusy?'disabled':''} style="padding:7px 18px;font-size:13.5px">
+        ${ghBusy?'저장 중…':'💾 지금 저장 (모든 회원 반영)'}
+      </button>
+      <a href="https://github.com/${GH_OWNER}/${GH_REPO}/blob/main/${GH_FILE}" target="_blank"
+         style="font-size:12px;color:var(--sky)">파일 확인 ↗</a>
+      <button class="b-ghost" onclick="mgrLogout()" style="font-size:12px;padding:5px 10px;margin-left:auto">로그아웃</button>
     </div>`;
 
   // 탭 메뉴
