@@ -1,0 +1,21 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*credentials*.json
+*secret*.json
+*service-account*.json
+
+# Local runtime files
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
