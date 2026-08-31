@@ -14,6 +14,7 @@ if ([string]::IsNullOrWhiteSpace($Repository)) {
 
 $script:RepoPath = [System.IO.Path]::GetFullPath($Repository)
 $script:GitCommand = (Get-Command git.exe -ErrorAction Stop).Source
+$env:GIT_TERMINAL_PROMPT = '0'
 $stateRoot = Join-Path $env:LOCALAPPDATA 'CodexGitAutoPush\cg'
 $logPath = Join-Path $stateRoot 'watch.log'
 New-Item -ItemType Directory -Force -Path $stateRoot | Out-Null
@@ -116,7 +117,7 @@ function Push-CurrentBranch {
 
     $upstreamResult = Invoke-Git -Arguments @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}') -AllowFailure
     if ($upstreamResult.ExitCode -ne 0) {
-        Invoke-Git -Arguments @('push', '--set-upstream', 'origin', $branch) | Out-Null
+        Invoke-Git -Arguments @('-c', 'credential.interactive=never', 'push', '--set-upstream', 'origin', $branch) | Out-Null
         return
     }
 
@@ -126,13 +127,13 @@ function Push-CurrentBranch {
         return
     }
 
-    $pullResult = Invoke-Git -Arguments @('pull', '--rebase') -AllowFailure
+    $pullResult = Invoke-Git -Arguments @('-c', 'credential.interactive=never', 'pull', '--rebase') -AllowFailure
     if ($pullResult.ExitCode -ne 0) {
         Invoke-Git -Arguments @('rebase', '--abort') -AllowFailure | Out-Null
         throw 'The remote changes could not be rebased automatically. The local commit was preserved.'
     }
 
-    Invoke-Git -Arguments @('push') | Out-Null
+    Invoke-Git -Arguments @('-c', 'credential.interactive=never', 'push') | Out-Null
     Write-Log ('Push to origin/{0} completed.' -f $branch)
 }
 
