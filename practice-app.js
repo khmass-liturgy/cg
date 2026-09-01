@@ -325,6 +325,7 @@
   }
 
   function renderToday(){
+    if(!isAdminUser()&&practiceAccess.status!=='approved')return `<div class="app-shell"><div class="app-kicker">MY PRACTICE</div><h2 class="app-title">나만의 연습 기록</h2>${practiceGate()}</div>`;
     const log=todayLog();
     const monthly=monthStats();
     const focus=currentFocus();
@@ -401,6 +402,7 @@
     return recitals[key];
   }
   function renderRecital(){
+    if(!isAdminUser()&&practiceAccess.status!=='approved')return `<div class="app-shell"><div class="app-kicker">MY PRACTICE</div><h2 class="app-title">나만의 연습 기록</h2>${practiceGate()}</div>`;
     const item=ensureRecital(),key=monthKey(),diff=dayDiff(item.date);
     const selectedCount=(item.remotePieces?.length||item.pieces.length);
     const completed=CHECKS.filter(([id])=>item.checks?.[id]).length+(selectedCount>0?1:0);
@@ -533,5 +535,6 @@
   normalizeRepertoire();
   setupChrome();
   initRecitalCloud();
+  if(typeof auth!=='undefined'&&auth?.onAuthStateChanged){auth.onAuthStateChanged(user=>{if(!user){practiceAccess={status:'signed-out',memberId:'',message:''};if(!isAdminUser())renderApp();}else if(!isAdminUser())loadMemberPractice();});}
   renderApp();
 })();
