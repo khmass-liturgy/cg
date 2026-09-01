@@ -163,6 +163,61 @@
     const selected=selectedId||'unassigned';
     return `<option value="unassigned"${selected==='unassigned'?' selected':''}>담당 미지정</option>`+parts.map(part=>`<optgroup label="${part}">${MEMBERS.filter(member=>member.part===part).map(member=>`<option value="${member.id}"${selected===member.id?' selected':''}>${html(member.name)}</option>`).join('')}</optgroup>`).join('');
   }
+  function arrayValues(value){return Array.isArray(value)?value:Object.values(value||{});}
+  function isKhcgMonthlyRecital(rehearsal){return !!(rehearsal&&!rehearsal.cancelled&&(rehearsal.monthlyRecital===true||/월례\s*발표회/.test(rehearsal.memo||'')));}
+  function khcgRecitalDate(month){
+    const scheduled=khcgSchedule.rehearsals.filter(item=>isKhcgMonthlyRecital(item)&&String(item.date||'').slice(0,7)===month).sort((a,b)=>String(a.date).localeCompare(String(b.date)))[0];
+    if(scheduled?.date)return {date:scheduled.date,source:'교하성당 기타반 일정'};
+    const recital=khcgSchedule.recitals.find(item=>item&&item.month===month);
+    if(recital?.date)return {date:recital.date,source:'교하성당 월례발표회 계획'};
+    return {date:fourthThursday(month),source:khcgSchedule.ready?'교하성당 기본 일정':'일정 불러오는 중'};
+  }
+  function syncRecitalDate(month=monthKey()){
+    const item=recitals[month];if(!item)return;
+    const plan=khcgRecitalDate(month);
+    if(item.date!==plan.date){item.date=plan.date;item.dateSource=plan.source;saveRecitals();}
+    else item.dateSource=plan.source;
+  }
+  function recitalPieceSnapshots(item){
+    return (item.pieces||[]).map(id=>repertoire.find(piece=>piece.id===id)).filter(Boolean).map(piece=>({sourceId:piece.id,title:piece.title,composer:piece.composer||'',memberId:memberIdFor(piece),memberName:memberLabel(piece),memberPart:memberPart(piece),stage:piece.stage||'learning'}));
+  }
+  function applyCloudRecital(data){
+    const key=monthKey(),current=ensureRecital(),remotePieces=Array.isArray(data.selectedPieces)?data.selectedPieces:[];
+    const matchedIds=remotePieces.map(remote=>repertoire.find(piece=>piece.id===remote.sourceId||(piece.title===remote.title&&memberIdFor(piece)===remote.memberId))?.id).filter(Boolean);
+    recitals[key]={...current,title:typeof data.title==='string'?data.title:current.title,checks:data.checks&&typeof data.checks==='object'?data.checks:current.checks,notes:typeof data.notes==='string'?data.notes:current.notes,performed:!!data.performed,remotePieces,pieces:matchedIds.length?matchedIds:current.pieces};
+    syncRecitalDate(key);saveRecitals();
+  }
+  function initRecitalCloud(){
+    try{
+      if(typeof db!=='undefined'&&db?.collection){
+        db.collection('monthlyRecitalPlans').doc(monthKey()).onSnapshot(snapshot=>{
+          recitalCloud.ready=true;
+          if(snapshot.exists)applyCloudRecital(snapshot.data()||{});
+          if(activeView==='recital')renderApp();
+        },()=>{recitalCloud.error='Firebase 발표곡을 불러오지 못했습니다';if(activeView==='recital')renderApp();});
+      }
+      if(typeof firebase!=='undefined'&&firebase?.database){
+        let scheduleApp=firebase.apps.find(app=>app.name==='khcg-schedule');
+        if(!scheduleApp)scheduleApp=firebase.initializeApp(KHCG_SCHEDULE_CONFIG,'khcg-schedule');
+        firebase.database(scheduleApp).ref('gyoha-guitar').on('value',snapshot=>{
+          const data=snapshot.val()||{};
+          khcgSchedule={ready:true,rehearsals:arrayValues(data.rehearsals),recitals:arrayValues(data.monthlyRecitals),error:false};
+          syncRecitalDate();if(activeView==='recital')renderApp();
+        },()=>{khcgSchedule.error=true;if(activeView==='recital')renderApp();});
+      }
+    }catch(error){console.warn('월례발표회 Firebase 연결 오류',error);}
+  }
+  async function saveRecitalToFirebase(){
+    const key=monthKey(),item=ensureRecital();syncRecitalDate(key);saveRecitals();
+    if(typeof db==='undefined'||!db?.collection||typeof auth==='undefined'||!auth?.currentUser||typeof isAdmin==='undefined'||!isAdmin){
+      recitalCloud.error='Firebase 저장은 강좌 관리에서 운영자 로그인 후 사용할 수 있습니다';if(activeView==='recital')renderApp();return;
+    }
+    recitalCloud.saving=true;recitalCloud.error='';if(activeView==='recital')renderApp();
+    try{
+      await db.collection('monthlyRecitalPlans').doc(key).set({month:key,title:item.title,date:item.date,dateSource:item.dateSource||khcgRecitalDate(key).source,selectedPieces:recitalPieceSnapshots(item),checks:item.checks||{},notes:item.notes||'',performed:!!item.performed,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:auth.currentUser.email||auth.currentUser.uid},{merge:true});
+    }catch(error){recitalCloud.error='Firebase 발표곡 저장에 실패했습니다';console.warn('월례발표회 저장 오류',error);}
+    finally{recitalCloud.saving=false;if(activeView==='recital')renderApp();}
+  }
   function normalizeRepertoire(){
     let changed=false;
     repertoire=repertoire.map(item=>{
