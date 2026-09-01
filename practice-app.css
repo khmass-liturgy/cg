@@ -100,6 +100,10 @@ main{max-width:1160px;padding:24px 22px 72px}
 .repertoire-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:20px 0}
 .unit-filter-wrap{margin-top:24px;padding:15px 16px;background:var(--paper);border:1px solid var(--app-line);border-radius:16px}
 .unit-filter-label{font-size:11px;color:var(--app-muted);font-weight:800;letter-spacing:.7px;margin-bottom:8px}
+.member-filter-label{margin-top:13px}
+.member-source-link{display:inline-flex;margin-top:12px;color:var(--forest-2);font-size:12px;font-weight:750;text-decoration:none}
+.member-source-link:hover{text-decoration:underline}
+.member-part{font-size:11px;color:var(--app-muted)}
 .unit-pills{margin:0}
 .filter-pills{display:flex;gap:7px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
 .filter-pills::-webkit-scrollbar{display:none}
