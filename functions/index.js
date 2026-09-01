@@ -184,6 +184,7 @@ exports.saveMonthlyRecitalPlan = onCall(async (request) => {
 });
 
 exports.getMonthlyRecitalPlan = onCall(async (request) => {
+  requireAdmin(request);
   const month = recitalMonth(request.data && request.data.month);
   const snapshot = await admin.firestore().collection("monthlyRecitalPlans").doc(month).get();
   if (!snapshot.exists) return { ok: true, plan: null };
