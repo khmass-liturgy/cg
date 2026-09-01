@@ -16,6 +16,9 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
+const admin = require("firebase-admin");
+
+if (!admin.apps.length) admin.initializeApp();
 
 const GITHUB_TOKEN = defineSecret("GITHUB_TOKEN");
 
@@ -26,7 +29,7 @@ const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${G
 
 // 운영자로 인정할 구글 계정 이메일 — 브라우저 쪽 목록과 반드시 동일하게 유지하세요.
 // (여기가 진짜 권한 검사입니다. 클라이언트 쪽 목록은 화면 표시용일 뿐 보안 경계가 아닙니다.)
-const ADMIN_EMAILS = ["trsumun@daum.net"];
+const ADMIN_EMAILS = ["trsumun@daum.net", "trsumun@gmail.com"];
 
 exports.saveCurriculum = onCall(
   {
@@ -120,3 +123,77 @@ exports.saveCurriculum = onCall(
     return { ok: true };
   }
 );
+
+function requireAdmin(request) {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "운영자 로그인이 필요합니다.");
+  }
+  const email = (request.auth.token.email || "").toLowerCase();
+  if (!ADMIN_EMAILS.includes(email)) {
+    throw new HttpsError("permission-denied", "이 계정은 월례발표회 저장 권한이 없습니다.");
+  }
+  return email;
+}
+
+function text(value, maxLength) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function recitalMonth(value) {
+  const month = text(value, 7);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+    throw new HttpsError("invalid-argument", "월례발표회 월 형식이 올바르지 않습니다.");
+  }
+  return month;
+}
+
+function recitalPlanPayload(data) {
+  const month = recitalMonth(data && data.month);
+  const date = text(data.date, 10);
+  if (!/^\d{4}-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(date)) {
+    throw new HttpsError("invalid-argument", "발표일 형식이 올바르지 않습니다.");
+  }
+  const selectedPieces = Array.isArray(data.selectedPieces) ? data.selectedPieces.slice(0, 20).map((piece) => ({
+    sourceId: text(piece && piece.sourceId, 80),
+    title: text(piece && piece.title, 160),
+    composer: text(piece && piece.composer, 100),
+    memberId: text(piece && piece.memberId, 80),
+    memberName: text(piece && piece.memberName, 80),
+    memberPart: text(piece && piece.memberPart, 30),
+    stage: text(piece && piece.stage, 30),
+  })).filter((piece) => piece.title) : [];
+  const checks = data && data.checks && typeof data.checks === "object" ? {
+    memory: !!data.checks.memory,
+    recording: !!data.checks.recording,
+    feedback: !!data.checks.feedback,
+    rehearsal: !!data.checks.rehearsal,
+  } : {};
+  return { month, date, title: text(data && data.title, 60), dateSource: text(data && data.dateSource, 80), selectedPieces, checks, notes: text(data && data.notes, 500), performed: !!(data && data.performed) };
+}
+
+exports.saveMonthlyRecitalPlan = onCall(async (request) => {
+  const email = requireAdmin(request);
+  const plan = recitalPlanPayload(request.data);
+  await admin.firestore().collection("monthlyRecitalPlans").doc(plan.month).set({
+    ...plan,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedBy: email,
+  }, { merge: true });
+  logger.info("월례발표회 공용 저장 완료", { month: plan.month, by: email, pieces: plan.selectedPieces.length });
+  return { ok: true, month: plan.month };
+});
+
+exports.getMonthlyRecitalPlan = onCall(async (request) => {
+  const month = recitalMonth(request.data && request.data.month);
+  const snapshot = await admin.firestore().collection("monthlyRecitalPlans").doc(month).get();
+  if (!snapshot.exists) return { ok: true, plan: null };
+  const data = snapshot.data() || {};
+  return {
+    ok: true,
+    plan: {
+      month: text(data.month, 7), date: text(data.date, 10), title: text(data.title, 60), dateSource: text(data.dateSource, 80),
+      selectedPieces: Array.isArray(data.selectedPieces) ? data.selectedPieces.map((piece) => ({ sourceId: text(piece && piece.sourceId, 80), title: text(piece && piece.title, 160), composer: text(piece && piece.composer, 100), memberId: text(piece && piece.memberId, 80), memberName: text(piece && piece.memberName, 80), memberPart: text(piece && piece.memberPart, 30), stage: text(piece && piece.stage, 30) })) : [],
+      checks: data.checks && typeof data.checks === "object" ? data.checks : {}, notes: text(data.notes, 500), performed: !!data.performed,
+    },
+  };
+});
