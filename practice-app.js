@@ -315,6 +315,42 @@
   function saveRepertoire(){persist(KEYS.repertoire,repertoire);}
   function saveLogs(){persist(KEYS.logs,logs);}
   function saveRecitals(){persist(KEYS.recitals,recitals);}
+  async function attachFilesToRepertoire(repId,files){
+    const item=repertoire.find(entry=>entry.id===repId);
+    if(!item||!files.length)return;
+    const existing=Array.isArray(item.attachments)?item.attachments:[];
+    const candidates=files.slice(0,Math.max(0,MAX_ATTACHMENTS_PER_PIECE-existing.length));
+    if(!candidates.length){toast(`곡당 파일은 ${MAX_ATTACHMENTS_PER_PIECE}개까지 첨부할 수 있습니다`);return;}
+    const oversized=candidates.filter(file=>Number(file.size||0)>MAX_ATTACHMENT_BYTES);
+    const valid=candidates.filter(file=>Number(file.size||0)<=MAX_ATTACHMENT_BYTES);
+    if(oversized.length)toast(`12MB를 넘는 파일 ${oversized.length}개는 제외했습니다`);
+    if(!valid.length)return;
+    const added=[];
+    for(const file of valid){
+      try{added.push(await saveAttachment(repId,file));}
+      catch(error){toast('파일 보관 공간이 부족하거나 저장에 실패했습니다');break;}
+    }
+    if(!added.length)return;
+    item.attachments=[...existing,...added];saveRepertoire();renderApp();toast(`${added.length}개 파일을 첨부했습니다`);
+  }
+  window.attachRepFiles=async function(repId,input){
+    const files=Array.from(input?.files||[]);if(input)input.value='';
+    await attachFilesToRepertoire(repId,files);
+  };
+  window.downloadRepAttachment=async function(id){
+    try{
+      const file=await getAttachment(id);
+      if(!file?.blob){toast('이 기기에서 찾을 수 없는 파일입니다');return;}
+      const url=URL.createObjectURL(file.blob),link=document.createElement('a');
+      link.href=url;link.download=file.name||'attachment';link.style.display='none';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(error){toast('첨부 파일을 열 수 없습니다');}
+  };
+  window.removeRepAttachment=async function(repId,id){
+    const item=repertoire.find(entry=>entry.id===repId),file=item?.attachments?.find(entry=>entry.id===id);
+    if(!item||!file||!confirm(`“${file.name}” 파일을 삭제할까요?`))return;
+    try{await deleteAttachment(id);item.attachments=item.attachments.filter(entry=>entry.id!==id);saveRepertoire();renderApp();toast('첨부 파일을 삭제했습니다');}
+    catch(error){toast('첨부 파일 삭제에 실패했습니다');}
+  };
   function toast(message){
     document.querySelector('.save-toast')?.remove();
     const el=document.createElement('div');el.className='save-toast';el.textContent=message;document.body.appendChild(el);
@@ -343,12 +379,15 @@
     renderApp();
   };
   window.toggleAddForm=function(){showAddForm=!showAddForm;renderApp();setTimeout(()=>document.getElementById('rep-title')?.focus(),50);};
-  window.addManualRepertoire=function(event){
+  window.addManualRepertoire=async function(event){
     event.preventDefault();
     const title=document.getElementById('rep-title')?.value.trim();if(!title)return;
+    const files=Array.from(document.getElementById('rep-files')?.files||[]);
     const member=memberInfo(document.getElementById('rep-member')?.value||'unassigned');
-    repertoire.unshift({id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',memberId:member.id,memberName:member.name,memberPart:member.part,stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''});
+    const item={id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',memberId:member.id,memberName:member.name,memberPart:member.part,attachments:[],stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''};
+    repertoire.unshift(item);
     saveRepertoire();showAddForm=false;renderApp();toast('레퍼토리에 곡을 추가했습니다');
+    await attachFilesToRepertoire(item.id,files);
   };
   window.updateRep=function(id,field,value){
     const allowed=['stage','currentBpm','targetBpm','note'];if(!allowed.includes(field))return;
@@ -364,6 +403,7 @@
   window.chooseFocus=function(id){focusId=id;localStorage.setItem(KEYS.focus,id);toast('오늘의 집중곡으로 지정했습니다');};
   window.removeRep=function(id){
     const item=repertoire.find(r=>r.id===id);if(!item||!confirm(`“${item.title}”을 레퍼토리에서 삭제할까요?\n연습 일지와 강좌 자료는 삭제되지 않습니다.`))return;
+    (item.attachments||[]).forEach(file=>deleteAttachment(file.id).catch(()=>{}));
     repertoire=repertoire.filter(r=>r.id!==id);Object.values(recitals).forEach(r=>r.pieces=(r.pieces||[]).filter(pid=>pid!==id));saveRepertoire();saveRecitals();renderApp();
   };
   window.addLessonToRepertoire=function(lid){
