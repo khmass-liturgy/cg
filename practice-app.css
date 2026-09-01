@@ -124,6 +124,10 @@ main{max-width:1160px;padding:24px 22px 72px}
 .guide-cards p{margin:5px 0 7px;color:var(--app-muted);font-size:12px;line-height:1.6}
 .guide-cards .text-btn{min-height:32px;font-size:12px}
 .access-entry{margin-top:25px}
+.admin-help{margin-top:16px;padding:17px 19px;border-radius:16px;background:var(--forest-soft);border:1px solid #c7ddd4;color:var(--forest)}
+.admin-help strong{font-family:'Noto Serif KR',serif;font-size:17px}
+.admin-help ol{margin:8px 0 0;padding-left:19px;color:var(--app-muted);font-size:13px;line-height:1.8}
+.admin-help b{color:var(--forest)}
 .access-requests{display:flex;flex-direction:column;gap:7px;margin-top:13px}
 .access-requests small{color:var(--app-muted);font-size:11px}
 .access-request{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--app-line);font-size:12px;color:var(--app-muted)}
