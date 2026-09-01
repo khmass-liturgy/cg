@@ -297,7 +297,7 @@
   window.updateRepUnit=function(id,unitId){
     const item=repertoire.find(r=>r.id===id),unit=unitInfo(unitId);if(!item)return;
     item.unitId=unit.id;item.courseId=unit.id==='personal'?'':unit.id;item.courseTitle=unit.title;
-    saveRepertoire();renderApp();toast(`${unit.title} 단원으로 옮겼습니다`);
+    activeUnit=unit.id;saveRepertoire();renderApp();toast(`${unit.title} 단원으로 옮겼습니다`);
   };
   window.chooseFocus=function(id){focusId=id;localStorage.setItem(KEYS.focus,id);toast('오늘의 집중곡으로 지정했습니다');};
   window.removeRep=function(id){
