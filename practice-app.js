@@ -113,10 +113,51 @@
   let sessionMinutes=30;
   let showAddForm=false;
   let focusId=localStorage.getItem(KEYS.focus)||'';
+  let practiceAccess={status:'signed-out',memberId:'',message:''};
+  let practiceSaveTimer=null;
 
   const legacyRenderHome=window.renderHome;
   const legacyOpenLesson=window.openLesson;
   const legacyUpdateProg=window.updateProg;
+
+  function isAdminUser(){return typeof isAdmin!=='undefined'&&isAdmin;}
+  async function loadMemberPractice(memberId=''){
+    if(typeof functions==='undefined'||!functions?.httpsCallable||typeof auth==='undefined'||!auth?.currentUser){practiceAccess={status:'signed-out',memberId:'',message:'내 연습 기록을 보려면 Google 로그인이 필요합니다'};renderApp();return;}
+    try{
+      const result=await functions.httpsCallable('getMemberPractice')(memberId?{memberId}:{});
+      const remote=result.data?.practice||{};
+      repertoire=Array.isArray(remote.repertoire)?remote.repertoire:[];
+      logs=remote.logs&&typeof remote.logs==='object'?remote.logs:{};
+      normalizeRepertoire();saveRepertoire();saveLogs();
+      practiceAccess={status:'approved',memberId:result.data?.memberId||memberId,message:''};renderApp();
+    }catch(error){
+      const code=error?.code||'';
+      practiceAccess={status:code.includes('failed-precondition')?'pending':'signed-out',memberId:'',message:code.includes('failed-precondition')?'관리자의 단원 연결 승인을 기다리고 있습니다':'내 연습 기록을 불러올 수 없습니다'};renderApp();
+    }
+  }
+  function queueMemberPracticeSave(){
+    if(practiceAccess.status!=='approved'||!practiceAccess.memberId||typeof functions==='undefined'||!functions?.httpsCallable)return;
+    clearTimeout(practiceSaveTimer);practiceSaveTimer=setTimeout(async()=>{
+      try{await functions.httpsCallable('saveMemberPractice')({memberId:isAdminUser()?practiceAccess.memberId:undefined,practice:{repertoire,logs}});}
+      catch(error){toast('공용 연습 기록 저장에 실패했습니다');}
+    },500);
+  }
+  window.loginPractice=async function(){
+    try{if(typeof auth==='undefined')return; if(!auth.currentUser)await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());await loadMemberPractice();}
+    catch(error){toast('Google 로그인에 실패했습니다');}
+  };
+  window.requestPracticeAccess=async function(){
+    const memberId=document.getElementById('my-member-request')?.value;if(!memberId||typeof functions==='undefined'||!functions?.httpsCallable)return;
+    try{await functions.httpsCallable('requestMemberAccess')({memberId});practiceAccess={status:'pending',memberId:'',message:'관리자 승인 요청을 보냈습니다'};renderApp();}
+    catch(error){toast('단원 연결 요청에 실패했습니다');}
+  };
+  window.openAdminMemberPractice=function(){const memberId=document.getElementById('admin-member-view')?.value;if(memberId)loadMemberPractice(memberId);};
+  function practiceGate(){
+    if(isAdminUser())return `<div class="practice-access"><strong>관리자 보기</strong><span>선택한 단원의 개인 연습 기록만 열람할 수 있습니다.</span><div><select id="admin-member-view">${memberOptionGroups(practiceAccess.memberId||'unassigned')}</select><button class="secondary-btn" onclick="openAdminMemberPractice()">단원 기록 열기</button></div></div>`;
+    if(practiceAccess.status==='approved')return '';
+    if(practiceAccess.status==='signed-out')return `<div class="practice-access"><strong>내 연습 기록</strong><p>Google 로그인 후 관리자 승인된 본인 기록만 볼 수 있습니다.</p><button class="primary-btn" onclick="loginPractice()">Google로 내 연습 기록 열기</button></div>`;
+    return `<div class="practice-access"><strong>단원 연결 승인 대기</strong><p>${html(practiceAccess.message||'내 이름을 선택해 관리자에게 연결 요청을 보내세요.')}</p>${typeof auth!=='undefined'&&auth?.currentUser?`<select id="my-member-request">${memberOptionGroups('unassigned')}</select><button class="primary-btn" onclick="requestPracticeAccess()">단원 연결 요청</button>`:`<button class="primary-btn" onclick="loginPractice()">Google 로그인</button>`}</div>`;
+  }
 
   function todayLog(){
     const key=localKey();
