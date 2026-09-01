@@ -21,7 +21,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 header{background:rgba(255,254,250,.94);border-bottom:1px solid rgba(23,63,53,.09);backdrop-filter:blur(16px)}
 .head-in{max-width:1160px;height:66px}
-.brand-mark{background:linear-gradient(145deg,var(--forest-2),var(--forest));box-shadow:0 5px 16px rgba(23,63,53,.24)}
+.brand-mark{background:transparent;box-shadow:none;border-radius:5px;overflow:hidden}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain}
 .brand-txt h1{color:var(--forest);font-size:16px}
 .brand-txt p{color:var(--app-muted)}
 .prog-pill{color:var(--forest);background:var(--forest-soft);border-color:#c7ddd4;font-weight:700}
