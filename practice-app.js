@@ -299,13 +299,18 @@
     saveLogs();renderApp();toast(`${sessionMinutes}분 연습을 기록했습니다`);
   };
   window.setRepFilter=function(filter){repFilter=filter;renderApp();};
-  window.setUnitFilter=function(unitId){activeUnit=unitId;renderApp();};
+  window.setPartFilter=function(part){activePart=part;activeMember='all';renderApp();};
+  window.setMemberFilter=function(memberId){
+    activeMember=memberId;
+    if(memberId!=='all')activePart=memberInfo(memberId).part;
+    renderApp();
+  };
   window.toggleAddForm=function(){showAddForm=!showAddForm;renderApp();setTimeout(()=>document.getElementById('rep-title')?.focus(),50);};
   window.addManualRepertoire=function(event){
     event.preventDefault();
     const title=document.getElementById('rep-title')?.value.trim();if(!title)return;
-    const unit=unitInfo(document.getElementById('rep-unit')?.value||'personal');
-    repertoire.unshift({id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',unitId:unit.id,courseId:unit.id==='personal'?'':unit.id,courseTitle:unit.title,stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''});
+    const member=memberInfo(document.getElementById('rep-member')?.value||'unassigned');
+    repertoire.unshift({id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',memberId:member.id,memberName:member.name,memberPart:member.part,stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''});
     saveRepertoire();showAddForm=false;renderApp();toast('레퍼토리에 곡을 추가했습니다');
   };
   window.updateRep=function(id,field,value){
@@ -314,10 +319,10 @@
     item[field]=['currentBpm','targetBpm'].includes(field)?Math.max(20,Math.min(240,Number(value)||40)):value;
     saveRepertoire();if(field==='stage')renderApp();else toast('변경 내용을 저장했습니다');
   };
-  window.updateRepUnit=function(id,unitId){
-    const item=repertoire.find(r=>r.id===id),unit=unitInfo(unitId);if(!item)return;
-    item.unitId=unit.id;item.courseId=unit.id==='personal'?'':unit.id;item.courseTitle=unit.title;
-    activeUnit=unit.id;saveRepertoire();renderApp();toast(`${unit.title} 단원으로 옮겼습니다`);
+  window.updateRepMember=function(id,memberId){
+    const item=repertoire.find(r=>r.id===id),member=memberInfo(memberId);if(!item)return;
+    item.memberId=member.id;item.memberName=member.name;item.memberPart=member.part;
+    activePart=member.part;activeMember=member.id;saveRepertoire();renderApp();toast(`${member.name} 단원에게 배정했습니다`);
   };
   window.chooseFocus=function(id){focusId=id;localStorage.setItem(KEYS.focus,id);toast('오늘의 집중곡으로 지정했습니다');};
   window.removeRep=function(id){
@@ -325,10 +330,10 @@
     repertoire=repertoire.filter(r=>r.id!==id);Object.values(recitals).forEach(r=>r.pieces=(r.pieces||[]).filter(pid=>pid!==id));saveRepertoire();saveRecitals();renderApp();
   };
   window.addLessonToRepertoire=function(lid){
-    const lesson=lessonById(lid),course=courseForLesson(lid);if(!lesson)return;
+    const lesson=lessonById(lid);if(!lesson)return;
     const existing=repertoire.find(r=>r.lessonId===lid);
     if(existing){chooseFocus(existing.id);return;}
-    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',unitId:course?.id||'personal',courseId:course?.id||'',courseTitle:course?.title||'개별 곡',stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
+    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',memberId:'unassigned',memberName:'담당 미지정',memberPart:'미지정',stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
     repertoire.unshift(item);saveRepertoire();focusId=item.id;localStorage.setItem(KEYS.focus,item.id);injectLessonButton(lid);updateHeader();toast('레퍼토리에 담았습니다');
   };
   window.openRepLesson=function(lid){activeView='lessons';syncNav();legacyOpenLesson(lid);showBoard(false);injectLessonButton(lid);window.scrollTo(0,0);};
