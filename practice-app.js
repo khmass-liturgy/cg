@@ -374,10 +374,11 @@
   }
 
   function renderRepertoire(){
+    if(!isAdminUser()&&practiceAccess.status!=='approved')return `<div class="app-shell"><div class="app-kicker">MY PRACTICE</div><h2 class="app-title">나만의 연습 기록</h2>${practiceGate()}</div>`;
     const filtered=repertoire.filter(r=>(repFilter==='all'||r.stage===repFilter)&&(activeMember==='all'||memberIdFor(r)===activeMember)).sort((a,b)=>(STAGES[a.stage]?.order||1)-(STAGES[b.stage]?.order||1));
     return `<div class="app-shell">
       <div class="app-kicker">ENSEMBLE REPERTOIRE</div><h2 class="app-title">단원별로, 한 곡씩 무대에</h2><p class="app-subtitle">기타반 실제 단원에게 곡을 배정하고, 사람별 연습·발표곡을 따로 관리하세요.</p>
-      <div class="unit-filter-wrap"><div class="unit-filter-label">담당 단원</div><div class="filter-pills unit-pills">${[{id:'all',name:'전체 단원'},...memberOptions()].map(member=>{const count=member.id==='all'?repertoire.length:repertoire.filter(r=>memberIdFor(r)===member.id).length;return `<button class="filter-pill${activeMember===member.id?' active':''}" onclick="setMemberFilter('${member.id}')">${html(member.name)} ${count}</button>`;}).join('')}</div><a class="member-source-link" href="https://khmass-liturgy.github.io/khcg/" target="_blank" rel="noopener">기타반 단원 관리 열기 ↗</a></div>
+      ${practiceGate()}<div class="unit-filter-wrap"><div class="unit-filter-label">담당 단원</div><div class="filter-pills unit-pills">${isAdminUser()?[{id:'all',name:'전체 단원'},...memberOptions()]:[{id:'all',name:'내 곡'}]}.map(member=>{const count=member.id==='all'?repertoire.length:repertoire.filter(r=>memberIdFor(r)===member.id).length;return `<button class="filter-pill${activeMember===member.id?' active':''}" onclick="setMemberFilter('${member.id}')">${html(member.name)} ${count}</button>`;}).join('')}</div>${isAdminUser()?`<a class="member-source-link" href="https://khmass-liturgy.github.io/khcg/" target="_blank" rel="noopener">기타반 단원 관리 열기 ↗</a>`:''}</div>
       <div class="repertoire-toolbar"><div class="filter-pills">${[['all','전체'],['learning','익히는 중'],['polishing','다듬는 중'],['ready','발표 가능']].map(([key,label])=>`<button class="filter-pill${repFilter===key?' active':''}" onclick="setRepFilter('${key}')">${label} ${key==='all'?repertoire.length:repertoire.filter(r=>r.stage===key).length}</button>`).join('')}</div><button class="primary-btn" onclick="toggleAddForm()">＋ 곡 추가</button></div>
       ${showAddForm?`<form class="add-form" onsubmit="addManualRepertoire(event)"><div class="form-title">새 레퍼토리</div><div class="form-grid unit-add-grid"><div class="app-field"><label for="rep-title">곡명 *</label><input id="rep-title" required maxlength="80" placeholder="예: 로망스"></div><div class="app-field"><label for="rep-member">담당 단원</label><select id="rep-member">${memberOptionGroups(activeMember==='all'?'unassigned':activeMember)}</select></div><div class="app-field"><label for="rep-composer">작곡가</label><input id="rep-composer" maxlength="60" placeholder="예: Anonymous"></div><div class="app-field"><label for="rep-target">목표 BPM</label><input id="rep-target" type="number" min="20" max="240" value="80"></div><div class="app-field rep-file-field"><label for="rep-files">첨부 파일</label><input id="rep-files" type="file" multiple></div><button class="primary-btn" type="submit">저장</button></div></form>`:''}
       ${filtered.length?`<div class="repertoire-list">${filtered.map((item,i)=>renderRepCard(item,i)).join('')}</div>`:`<div class="empty-state"><div class="empty-icon">♬</div><div class="empty-title">${repertoire.length?'이 단원에게 배정된 곡이 없습니다':'아직 담은 곡이 없습니다'}</div><p class="empty-copy">강좌에서 담은 곡은 먼저 담당 미지정으로 저장됩니다. 곡 카드에서 실제 기타반 단원을 지정해 주세요.</p><button class="primary-btn" onclick="toggleAddForm()">＋ 곡 추가</button></div>`}
@@ -414,8 +415,8 @@
     </div>`;
   }
 
-  function saveRepertoire(){persist(KEYS.repertoire,repertoire);}
-  function saveLogs(){persist(KEYS.logs,logs);}
+  function saveRepertoire(){persist(KEYS.repertoire,repertoire);queueMemberPracticeSave();}
+  function saveLogs(){persist(KEYS.logs,logs);queueMemberPracticeSave();}
   function saveRecitals(){persist(KEYS.recitals,recitals);}
   async function attachFilesToRepertoire(repId,files){
     const item=repertoire.find(entry=>entry.id===repId);
