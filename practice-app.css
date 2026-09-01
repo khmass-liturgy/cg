@@ -100,6 +100,12 @@ main{max-width:1160px;padding:24px 22px 72px}
 
 .repertoire-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:20px 0}
 .unit-filter-wrap{margin-top:24px;padding:15px 16px;background:var(--paper);border:1px solid var(--app-line);border-radius:16px}
+.practice-access{margin:22px 0;padding:18px;background:var(--paper);border:1px solid #c7ddd4;border-radius:16px;color:var(--forest)}
+.practice-access strong{display:block;font-family:'Noto Serif KR',serif;font-size:19px}
+.practice-access p,.practice-access span{display:block;margin:6px 0 13px;color:var(--app-muted);font-size:13px;line-height:1.55}
+.practice-access>div{display:flex;gap:9px;align-items:center}
+.practice-access select{min-width:0;flex:1;min-height:42px;border:1px solid var(--app-line);border-radius:10px;padding:8px;background:#fbfaf6;color:var(--app-ink)}
+.practice-access .secondary-btn{width:auto}
 .unit-filter-label{font-size:11px;color:var(--app-muted);font-weight:800;letter-spacing:.7px;margin-bottom:8px}
 .member-filter-label{margin-top:13px}
 .member-source-link{display:inline-flex;margin-top:12px;color:var(--forest-2);font-size:12px;font-weight:750;text-decoration:none}
