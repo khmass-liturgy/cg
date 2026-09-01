@@ -7,6 +7,11 @@
     recitals:'kg_recitals_v2',
     focus:'kg_practice_focus_v2'
   };
+  const FILE_DB_NAME='kg_repertoire_files_v1';
+  const FILE_STORE='attachments';
+  const MAX_ATTACHMENTS_PER_PIECE=5;
+  const MAX_ATTACHMENT_BYTES=12*1024*1024;
+  let fileDbPromise=null;
   const STAGES={
     learning:{label:'익히는 중',order:1},
     polishing:{label:'다듬는 중',order:2},
@@ -45,6 +50,36 @@
     }catch(e){return fallback;}
   }
   function persist(key,value){localStorage.setItem(key,JSON.stringify(value));}
+  function fileDb(){
+    if(fileDbPromise)return fileDbPromise;
+    fileDbPromise=new Promise((resolve,reject)=>{
+      if(!window.indexedDB){reject(new Error('이 브라우저는 파일 보관을 지원하지 않습니다.'));return;}
+      const request=indexedDB.open(FILE_DB_NAME,1);
+      request.onupgradeneeded=()=>request.result.createObjectStore(FILE_STORE,{keyPath:'id'});
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error||new Error('파일 보관함을 열 수 없습니다.'));
+    });
+    return fileDbPromise;
+  }
+  function attachmentId(){return `file_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;}
+  function fileSize(bytes){
+    if(bytes<1024*1024)return `${Math.max(1,Math.round(bytes/1024))} KB`;
+    return `${(bytes/(1024*1024)).toFixed(1)} MB`;
+  }
+  async function saveAttachment(repId,file){
+    const id=attachmentId(),record={id,repId,name:file.name||'첨부 파일',type:file.type||'',size:Number(file.size||0),addedAt:new Date().toISOString(),blob:file};
+    const db=await fileDb();
+    await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,'readwrite');tx.objectStore(FILE_STORE).put(record);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('파일 저장에 실패했습니다.'));});
+    return {id,name:record.name,type:record.type,size:record.size,addedAt:record.addedAt};
+  }
+  async function getAttachment(id){
+    const db=await fileDb();
+    return new Promise((resolve,reject)=>{const request=db.transaction(FILE_STORE,'readonly').objectStore(FILE_STORE).get(id);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('첨부 파일을 읽을 수 없습니다.'));});
+  }
+  async function deleteAttachment(id){
+    const db=await fileDb();
+    await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,'readwrite');tx.objectStore(FILE_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('첨부 파일 삭제에 실패했습니다.'));});
+  }
   function html(value){
     return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
@@ -124,9 +159,9 @@
     let changed=false;
     repertoire=repertoire.map(item=>{
       const member=memberInfo(memberIdFor(item));
-      if(item.memberId===member.id&&item.memberName===member.name&&item.memberPart===member.part)return item;
+      if(item.memberId===member.id&&item.memberName===member.name&&item.memberPart===member.part&&Array.isArray(item.attachments))return item;
       changed=true;
-      return {...item,memberId:member.id,memberName:member.name,memberPart:member.part};
+      return {...item,memberId:member.id,memberName:member.name,memberPart:member.part,attachments:Array.isArray(item.attachments)?item.attachments:[]};
     });
     if(changed) persist(KEYS.repertoire,repertoire);
   }
