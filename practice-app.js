@@ -169,6 +169,22 @@
     return `<div class="practice-access"><strong>단원 연결 승인 대기</strong><p>${html(practiceAccess.message||'내 이름을 선택해 관리자에게 연결 요청을 보내세요.')}</p>${typeof auth!=='undefined'&&auth?.currentUser?`<select id="my-member-request">${memberOptionGroups('unassigned')}</select><button class="primary-btn" onclick="requestPracticeAccess()">단원 연결 요청</button><button class="secondary-btn" onclick="loginPractice()">승인 상태 다시 확인</button>`:`<button class="primary-btn" onclick="loginPractice()">Google 로그인</button>`}</div>`;
   }
 
+  function renderStartGuide(){
+    const accessText=practiceAccess.status==='approved'
+      ? '연결 완료 · 지금부터 내 기록만 안전하게 저장됩니다.'
+      : '처음 한 번만 Google 로그인 → 내 이름 선택 → 관리자 승인 순서로 연결합니다.';
+    return `<section class="start-guide" aria-label="연습실 이용 안내">
+      <div class="start-guide-head"><div><div class="app-kicker">START HERE</div><h2>연습실 이용 안내</h2><p>내 기록은 나만 보고, 관리자는 필요한 경우에만 단원별로 확인합니다.</p></div><span class="guide-status${practiceAccess.status==='approved'?' complete':''}">${practiceAccess.status==='approved'?'✓ 연결 완료':'처음 이용'}</span></div>
+      <div class="approval-guide"><div class="guide-icon">1</div><div><strong>Google로 로그인</strong><span>레퍼토리 메뉴에서 본인 Google 계정으로 로그인합니다.</span></div><div class="guide-icon">2</div><div><strong>내 이름으로 연결 요청</strong><span>기타반 단원 목록에서 본인 이름을 선택해 요청합니다.</span></div><div class="guide-icon">3</div><div><strong>관리자 승인 후 시작</strong><span>승인되면 다른 단원 기록은 보이지 않고 내 기록만 열립니다.</span></div></div>
+      <p class="guide-access-note">${html(accessText)}</p>
+      <div class="guide-cards">
+        <article><span class="guide-card-icon">♬</span><h3>레퍼토리 관리</h3><p>곡마다 현재 단계·목표 속도·어려운 부분을 기록하고, 악보 파일은 이 기기에 첨부해 둡니다.</p><button class="text-btn" onclick="setView('repertoire')">내 곡 관리하기 →</button></article>
+        <article><span class="guide-card-icon">✓</span><h3>매일 연습 요령</h3><p>15분도 충분합니다. 손 풀기 5분, 어려운 구절 15분, 멈추지 않는 한 번 연주 10분 순으로 해보세요.</p><button class="text-btn" onclick="document.querySelector('.routine-grid')?.scrollIntoView({behavior:'smooth',block:'start'})">오늘의 루틴 보기 →</button></article>
+        <article><span class="guide-card-icon">★</span><h3>월례발표회 준비</h3><p>이번 달 1~2곡을 정하고 매주 한 번 처음부터 끝까지 연주해 준비도를 확인합니다.</p><button class="text-btn" onclick="setView('recital')">발표회 준비하기 →</button></article>
+      </div>
+    </section>`;
+  }
+
   function todayLog(){
     const key=localKey();
     if(!logs[key]) logs[key]={minutes:0,blocks:[false,false,false],notes:'',pieces:[],updatedAt:''};
@@ -335,7 +351,7 @@
   }
 
   function renderToday(){
-    if(!isAdminUser()&&practiceAccess.status!=='approved')return `<div class="app-shell"><div class="app-kicker">MY PRACTICE</div><h2 class="app-title">나만의 연습 기록</h2>${practiceGate()}</div>`;
+    if(!isAdminUser()&&practiceAccess.status!=='approved')return `<div class="app-shell">${renderStartGuide()}<div class="access-entry"><div class="app-kicker">MY PRACTICE</div><h2 class="app-title">나만의 연습 기록</h2>${practiceGate()}</div></div>`;
     const log=todayLog();
     const monthly=monthStats();
     const focus=currentFocus();
@@ -346,6 +362,7 @@
       ['무대처럼 한 번','10분','멈추지 않고 녹음하며 처음부터 끝까지']
     ];
     return `<div class="app-shell">
+      ${renderStartGuide()}
       <section class="today-hero">
         <div class="app-kicker">${html(dateLabel())} · DAILY PRACTICE</div>
         <h2 class="app-title">오늘도 기타와<br>가볍게 ${sessionMinutes}분</h2>
