@@ -198,3 +198,81 @@ exports.getMonthlyRecitalPlan = onCall(async (request) => {
     },
   };
 });
+
+function requireSignedIn(request) {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Google 로그인이 필요합니다.");
+  return { uid: request.auth.uid, email: (request.auth.token.email || "").toLowerCase() };
+}
+
+function validMemberId(value) {
+  const memberId = text(value, 80);
+  if (!/^m_[a-z0-9_]+$/.test(memberId)) {
+    throw new HttpsError("invalid-argument", "단원 정보가 올바르지 않습니다.");
+  }
+  return memberId;
+}
+
+async function approvedMemberAccess(request, requestedMemberId) {
+  const caller = requireSignedIn(request);
+  if (ADMIN_EMAILS.includes(caller.email) && requestedMemberId) {
+    return { ...caller, memberId: validMemberId(requestedMemberId), admin: true };
+  }
+  const snapshot = await admin.firestore().collection("memberAccess").doc(caller.uid).get();
+  const access = snapshot.data() || {};
+  if (access.status !== "approved" || !access.memberId) {
+    throw new HttpsError("failed-precondition", "관리자의 단원 연결 승인이 필요합니다.");
+  }
+  return { ...caller, memberId: validMemberId(access.memberId), admin: ADMIN_EMAILS.includes(caller.email) };
+}
+
+function safePractice(data) {
+  const repertoire = Array.isArray(data && data.repertoire) ? data.repertoire.slice(0, 120).map((piece) => ({
+    id: text(piece && piece.id, 80), title: text(piece && piece.title, 160), composer: text(piece && piece.composer, 100),
+    stage: text(piece && piece.stage, 30), currentBpm: Math.max(20, Math.min(240, Number(piece && piece.currentBpm) || 40)),
+    targetBpm: Math.max(20, Math.min(240, Number(piece && piece.targetBpm) || 80)), note: text(piece && piece.note, 220),
+    lastPracticed: text(piece && piece.lastPracticed, 10), totalMinutes: Math.max(0, Math.min(100000, Number(piece && piece.totalMinutes) || 0)),
+  })).filter((piece) => piece.id && piece.title) : [];
+  const logs = {};
+  Object.entries(data && data.logs && typeof data.logs === "object" ? data.logs : {}).slice(-366).forEach(([day, log]) => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) logs[day] = { minutes: Math.max(0, Math.min(720, Number(log && log.minutes) || 0)), blocks: Array.isArray(log && log.blocks) ? log.blocks.slice(0, 3).map(Boolean) : [false, false, false], updatedAt: text(log && log.updatedAt, 40) };
+  });
+  return { repertoire, logs };
+}
+
+exports.requestMemberAccess = onCall(async (request) => {
+  const caller = requireSignedIn(request);
+  const memberId = validMemberId(request.data && request.data.memberId);
+  const ref = admin.firestore().collection("memberAccess").doc(caller.uid);
+  const previous = (await ref.get()).data() || {};
+  if (previous.status === "approved") return { ok: true, status: "approved", memberId: previous.memberId };
+  await ref.set({ uid: caller.uid, email: caller.email, memberId, status: "pending", requestedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  return { ok: true, status: "pending" };
+});
+
+exports.listMemberAccess = onCall(async (request) => {
+  requireAdmin(request);
+  const snapshot = await admin.firestore().collection("memberAccess").get();
+  return { ok: true, members: snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() })) };
+});
+
+exports.approveMemberAccess = onCall(async (request) => {
+  requireAdmin(request);
+  const uid = text(request.data && request.data.uid, 128);
+  if (!uid) throw new HttpsError("invalid-argument", "승인할 로그인 정보가 없습니다.");
+  const memberId = validMemberId(request.data && request.data.memberId);
+  await admin.firestore().collection("memberAccess").doc(uid).set({ memberId, status: "approved", approvedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  return { ok: true };
+});
+
+exports.getMemberPractice = onCall(async (request) => {
+  const access = await approvedMemberAccess(request, request.data && request.data.memberId);
+  const snapshot = await admin.firestore().collection("memberPractice").doc(access.memberId).get();
+  return { ok: true, memberId: access.memberId, practice: snapshot.exists ? snapshot.data() : { repertoire: [], logs: {} } };
+});
+
+exports.saveMemberPractice = onCall(async (request) => {
+  const access = await approvedMemberAccess(request, request.data && request.data.memberId);
+  const practice = safePractice(request.data && request.data.practice);
+  await admin.firestore().collection("memberPractice").doc(access.memberId).set({ ...practice, memberId: access.memberId, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedBy: access.uid }, { merge: true });
+  return { ok: true, memberId: access.memberId };
+});
