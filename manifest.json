@@ -1,11 +1,11 @@
 {
-  "name": "교하성당 클래식기타반 강좌",
-  "short_name": "기타반 강좌",
-  "description": "교하성당 클래식기타반 초급·중급·고급 전 과정",
+  "name": "교하성당 클래식기타반 · 나의 연습실",
+  "short_name": "기타 연습실",
+  "description": "매일 연습하고 월례발표회를 준비하는 클래식기타 레퍼토리 관리 앱",
   "start_url": "/cg/",
   "display": "standalone",
   "background_color": "#faf8f3",
-  "theme_color": "#7a2e2e",
+  "theme_color": "#173f35",
   "icons": [
     {
       "src": "icon-192.png",
