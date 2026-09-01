@@ -90,11 +90,6 @@
   function dateLabel(date=new Date()){
     return new Intl.DateTimeFormat('ko-KR',{month:'long',day:'numeric',weekday:'long'}).format(date);
   }
-  function lastSaturday(year,monthIndex){
-    const d=new Date(year,monthIndex+1,0);
-    d.setDate(d.getDate()-((d.getDay()+1)%7));
-    return localKey(d);
-  }
   function dayDiff(dateText){
     const now=new Date(); now.setHours(0,0,0,0);
     const target=new Date(dateText+'T00:00:00');
@@ -114,7 +109,6 @@
   let recitals=load(KEYS.recitals,{});
   let activeView='today';
   let repFilter='all';
-  let activePart='all';
   let activeMember='all';
   let sessionMinutes=30;
   let showAddForm=false;
@@ -459,7 +453,7 @@
   window.updateRepMember=function(id,memberId){
     const item=repertoire.find(r=>r.id===id),member=memberInfo(memberId);if(!item)return;
     item.memberId=member.id;item.memberName=member.name;item.memberPart=member.part;
-    activePart=member.part;activeMember=member.id;saveRepertoire();renderApp();toast(`${member.name} 단원에게 배정했습니다`);
+    activeMember=member.id;saveRepertoire();renderApp();toast(`${member.name} 단원에게 배정했습니다`);
   };
   window.chooseFocus=function(id){focusId=id;localStorage.setItem(KEYS.focus,id);toast('오늘의 집중곡으로 지정했습니다');};
   window.removeRep=function(id){
