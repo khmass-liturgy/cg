@@ -173,6 +173,11 @@ main{max-width:1160px;padding:24px 22px 72px}
 .recital-piece-title{font-size:13px;font-weight:750;color:var(--forest);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recital-piece-sub{font-size:11px;color:var(--app-muted)}
 .recital-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.synced-date{min-height:46px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--app-line);border-radius:11px;background:var(--forest-soft);padding:8px 12px;color:var(--forest);font-size:13px;font-weight:800}
+.synced-date small{margin-top:2px;color:var(--app-muted);font-size:10.5px;font-weight:600}
+.recital-save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+.recital-save-row .primary-btn,.recital-save-row .secondary-btn{width:auto}
+.firebase-status{font-size:11px;color:var(--app-muted);line-height:1.45}
 
 .lesson-rep-action{display:inline-flex;align-items:center;gap:7px;margin-top:16px;border:0;border-radius:11px;background:var(--forest);color:#fff;min-height:44px;padding:10px 15px;font-weight:750;cursor:pointer}
 .lesson-rep-action.saved{background:var(--forest-soft);color:var(--forest);border:1px solid #bdd7cc}
@@ -243,6 +248,9 @@ main{max-width:1160px;padding:24px 22px 72px}
   .repertoire-list{gap:9px}
   .attachment-box{padding:9px 10px}
   .rep-file-field{min-width:0}
+  .recital-fields{grid-template-columns:1fr}
+  .recital-save-row{align-items:stretch;flex-direction:column}
+  .recital-save-row .primary-btn,.recital-save-row .secondary-btn{width:100%}
   .rep-card{border-radius:16px;padding:16px}
   .rep-controls{grid-template-columns:1fr 1fr}
   .form-grid,.recital-fields{grid-template-columns:1fr}
