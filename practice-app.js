@@ -183,13 +183,7 @@
   }
   function initRecitalCloud(){
     try{
-      if(typeof db!=='undefined'&&db?.collection){
-        db.collection('monthlyRecitalPlans').doc(monthKey()).onSnapshot(snapshot=>{
-          recitalCloud.ready=true;
-          if(snapshot.exists)applyCloudRecital(snapshot.data()||{});
-          if(activeView==='recital')renderApp();
-        },()=>{recitalCloud.error='Firebase 공용 계획은 운영자 로그인 후 동기화됩니다';if(activeView==='recital')renderApp();});
-      }
+      loadRecitalFromFirebase();
       if(typeof firebase!=='undefined'&&firebase?.database){
         let scheduleApp=firebase.apps.find(app=>app.name==='khcg-schedule');
         if(!scheduleApp)scheduleApp=firebase.initializeApp(KHCG_SCHEDULE_CONFIG,'khcg-schedule');
@@ -201,14 +195,24 @@
       }
     }catch(error){console.warn('월례발표회 Firebase 연결 오류',error);}
   }
+  async function loadRecitalFromFirebase(){
+    if(typeof functions==='undefined'||!functions?.httpsCallable)return;
+    try{
+      const result=await functions.httpsCallable('getMonthlyRecitalPlan')({month:monthKey()});
+      recitalCloud.ready=true;
+      if(result.data?.plan)applyCloudRecital(result.data.plan);
+      if(activeView==='recital')renderApp();
+    }catch(error){recitalCloud.error='Firebase 공용 계획을 불러오지 못했습니다';if(activeView==='recital')renderApp();}
+  }
   async function saveRecitalToFirebase(){
     const key=monthKey(),item=ensureRecital();syncRecitalDate(key);saveRecitals();
-    if(typeof db==='undefined'||!db?.collection||typeof auth==='undefined'||!auth?.currentUser||typeof isAdmin==='undefined'||!isAdmin){
+    if(typeof functions==='undefined'||!functions?.httpsCallable||typeof auth==='undefined'||!auth?.currentUser||typeof isAdmin==='undefined'||!isAdmin){
       recitalCloud.error='Firebase 저장은 강좌 관리에서 운영자 로그인 후 사용할 수 있습니다';if(activeView==='recital')renderApp();return;
     }
     recitalCloud.saving=true;recitalCloud.error='';if(activeView==='recital')renderApp();
     try{
-      await db.collection('monthlyRecitalPlans').doc(key).set({month:key,title:item.title,date:item.date,dateSource:item.dateSource||khcgRecitalDate(key).source,selectedPieces:recitalPieceSnapshots(item),checks:item.checks||{},notes:item.notes||'',performed:!!item.performed,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:auth.currentUser.email||auth.currentUser.uid},{merge:true});
+      await functions.httpsCallable('saveMonthlyRecitalPlan')({month:key,title:item.title,date:item.date,dateSource:item.dateSource||khcgRecitalDate(key).source,selectedPieces:recitalPieceSnapshots(item),checks:item.checks||{},notes:item.notes||'',performed:!!item.performed});
+      recitalCloud.ready=true;toast('Firebase 공용 발표 계획에 저장했습니다');
     }catch(error){recitalCloud.error='Firebase 발표곡 저장에 실패했습니다';console.warn('월례발표회 저장 오류',error);}
     finally{recitalCloud.saving=false;if(activeView==='recital')renderApp();}
   }
