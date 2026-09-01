@@ -127,6 +127,19 @@ main{max-width:1160px;padding:24px 22px 72px}
 .rep-unit-control{grid-column:1/-1}
 .unit-chip{display:inline-block;background:var(--forest-soft);color:var(--forest);border:1px solid #c7ddd4;border-radius:999px;padding:2px 7px;font-size:10.5px;font-weight:750;margin-right:4px}
 .rep-note{width:100%;min-height:66px;margin-top:9px;border:1px solid var(--app-line);background:#fbfaf6;border-radius:12px;padding:10px 11px;color:var(--app-ink);font-size:13px;resize:vertical}
+.attachment-box{margin-top:10px;border:1px solid var(--app-line);border-radius:12px;background:#fafaf6;padding:10px 11px}
+.attachment-head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--forest);font-size:12px;font-weight:800}
+.attachment-add{display:inline-flex;align-items:center;min-height:32px;padding:5px 9px;border:1px solid #c7ddd4;border-radius:9px;background:var(--forest-soft);color:var(--forest);font-size:12px;font-weight:750;cursor:pointer}
+.attachment-add input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.attachment-help{margin:5px 0 0;color:var(--app-muted);font-size:10.5px;line-height:1.45}
+.attachment-empty{margin-top:9px;color:var(--app-muted);font-size:12px}
+.attachment-list{display:flex;flex-direction:column;gap:5px;margin:9px 0 0;padding:0;list-style:none}
+.attachment-list li{display:flex;align-items:center;gap:6px;min-width:0}
+.attachment-open{min-width:0;flex:1;border:0;background:transparent;color:var(--forest-2);font-size:12px;font-weight:700;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;padding:5px 0}
+.attachment-open:hover{text-decoration:underline}
+.attachment-open small{color:var(--app-muted);font-size:10px;font-weight:600}
+.attachment-remove{width:28px;height:28px;flex:0 0 28px;border:0;border-radius:8px;background:#f8e8e4;color:#a34c40;font-size:19px;line-height:1;cursor:pointer}
+.rep-file-field{min-width:150px}
 .rep-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:11px}
 .link-btn{border:0;background:transparent;color:var(--forest-2);font-size:13px;font-weight:750;cursor:pointer;min-height:38px;padding:6px 2px}
 
@@ -227,6 +240,8 @@ main{max-width:1160px;padding:24px 22px 72px}
   .unit-filter-wrap{margin-top:17px;padding:13px}
   .filter-pills{width:100%}
   .repertoire-list{gap:9px}
+  .attachment-box{padding:9px 10px}
+  .rep-file-field{min-width:0}
   .rep-card{border-radius:16px;padding:16px}
   .rep-controls{grid-template-columns:1fr 1fr}
   .form-grid,.recital-fields{grid-template-columns:1fr}

@@ -410,7 +410,7 @@
     const lesson=lessonById(lid);if(!lesson)return;
     const existing=repertoire.find(r=>r.lessonId===lid);
     if(existing){chooseFocus(existing.id);return;}
-    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',memberId:'unassigned',memberName:'담당 미지정',memberPart:'미지정',stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
+    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',memberId:'unassigned',memberName:'담당 미지정',memberPart:'미지정',attachments:[],stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
     repertoire.unshift(item);saveRepertoire();focusId=item.id;localStorage.setItem(KEYS.focus,item.id);injectLessonButton(lid);updateHeader();toast('레퍼토리에 담았습니다');
   };
   window.openRepLesson=function(lid){activeView='lessons';syncNav();legacyOpenLesson(lid);showBoard(false);injectLessonButton(lid);window.scrollTo(0,0);};
