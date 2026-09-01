@@ -98,6 +98,9 @@ main{max-width:1160px;padding:24px 22px 72px}
 .empty-copy{font-size:13px;color:var(--app-muted);margin:7px auto 18px;max-width:440px;line-height:1.65}
 
 .repertoire-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:20px 0}
+.unit-filter-wrap{margin-top:24px;padding:15px 16px;background:var(--paper);border:1px solid var(--app-line);border-radius:16px}
+.unit-filter-label{font-size:11px;color:var(--app-muted);font-weight:800;letter-spacing:.7px;margin-bottom:8px}
+.unit-pills{margin:0}
 .filter-pills{display:flex;gap:7px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
 .filter-pills::-webkit-scrollbar{display:none}
 .filter-pill{border:1px solid var(--app-line);background:#fff;color:var(--app-muted);border-radius:999px;min-height:40px;padding:8px 14px;white-space:nowrap;cursor:pointer;font-weight:650;font-size:13px}
@@ -116,6 +119,9 @@ main{max-width:1160px;padding:24px 22px 72px}
 .compact-field{background:#f8f7f2;border:1px solid var(--app-line);border-radius:12px;padding:9px 11px}
 .compact-field label{display:block;font-size:10px;color:var(--app-muted);font-weight:700;margin-bottom:2px}
 .compact-field input{border:0;background:transparent;width:100%;min-width:0;color:var(--forest);font-weight:750;outline:0}
+.compact-field select{border:0;background:transparent;width:100%;min-width:0;color:var(--forest);font-weight:750;outline:0;cursor:pointer}
+.rep-unit-control{grid-column:1/-1}
+.unit-chip{display:inline-block;background:var(--forest-soft);color:var(--forest);border:1px solid #c7ddd4;border-radius:999px;padding:2px 7px;font-size:10.5px;font-weight:750;margin-right:4px}
 .rep-note{width:100%;min-height:66px;margin-top:9px;border:1px solid var(--app-line);background:#fbfaf6;border-radius:12px;padding:10px 11px;color:var(--app-ink);font-size:13px;resize:vertical}
 .rep-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:11px}
 .link-btn{border:0;background:transparent;color:var(--forest-2);font-size:13px;font-weight:750;cursor:pointer;min-height:38px;padding:6px 2px}
@@ -214,6 +220,7 @@ main{max-width:1160px;padding:24px 22px 72px}
   .focus-main,.focus-progress{padding:19px}
   .focus-title{font-size:21px}
   .repertoire-toolbar{margin:14px 0}
+  .unit-filter-wrap{margin-top:17px;padding:13px}
   .filter-pills{width:100%}
   .repertoire-list{gap:9px}
   .rep-card{border-radius:16px;padding:16px}
