@@ -188,7 +188,7 @@
           recitalCloud.ready=true;
           if(snapshot.exists)applyCloudRecital(snapshot.data()||{});
           if(activeView==='recital')renderApp();
-        },()=>{recitalCloud.error='Firebase 발표곡을 불러오지 못했습니다';if(activeView==='recital')renderApp();});
+        },()=>{recitalCloud.error='Firebase 공용 계획은 운영자 로그인 후 동기화됩니다';if(activeView==='recital')renderApp();});
       }
       if(typeof firebase!=='undefined'&&firebase?.database){
         let scheduleApp=firebase.apps.find(app=>app.name==='khcg-schedule');
