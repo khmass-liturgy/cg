@@ -245,7 +245,7 @@
     nav.innerHTML=`<div class="practice-nav-in">
       <button class="practice-nav-btn active" data-view="today" onclick="setView('today')"><span class="practice-nav-ico">⌂</span><span>오늘</span></button>
       <button class="practice-nav-btn" data-view="repertoire" onclick="setView('repertoire')"><span class="practice-nav-ico">♬</span><span>레퍼토리</span></button>
-      <button class="practice-nav-btn" data-view="recital" onclick="setView('recital')"><span class="practice-nav-ico">★</span><span>월례회</span></button>
+      <button class="practice-nav-btn" data-view="recital" onclick="setView('recital')"><span class="practice-nav-ico">★</span><span>월례발표회</span></button>
       <button class="practice-nav-btn" data-view="lessons" onclick="setView('lessons')"><span class="practice-nav-ico">▤</span><span>강좌</span></button>
     </div>`;
     document.querySelector('header')?.after(nav);
@@ -435,10 +435,8 @@
     saveLogs();renderApp();toast(`${sessionMinutes}분 연습을 기록했습니다`);
   };
   window.setRepFilter=function(filter){repFilter=filter;renderApp();};
-  window.setPartFilter=function(part){activePart=part;activeMember='all';renderApp();};
   window.setMemberFilter=function(memberId){
     activeMember=memberId;
-    if(memberId!=='all')activePart=memberInfo(memberId).part;
     renderApp();
   };
   window.toggleAddForm=function(){showAddForm=!showAddForm;renderApp();setTimeout(()=>document.getElementById('rep-title')?.focus(),50);};
@@ -477,10 +475,10 @@
     repertoire.unshift(item);saveRepertoire();focusId=item.id;localStorage.setItem(KEYS.focus,item.id);injectLessonButton(lid);updateHeader();toast('레퍼토리에 담았습니다');
   };
   window.openRepLesson=function(lid){activeView='lessons';syncNav();legacyOpenLesson(lid);showBoard(false);injectLessonButton(lid);window.scrollTo(0,0);};
-  window.updateRecital=function(field,value){const allowed=['title','date','notes'];if(!allowed.includes(field))return;ensureRecital()[field]=value;saveRecitals();if(field!=='notes')renderApp();else toast('회고를 저장했습니다');};
-  window.toggleRecitalCheck=function(id,checked){ensureRecital().checks[id]=checked;saveRecitals();renderApp();};
-  window.toggleRecitalPiece=function(id,checked){const item=ensureRecital();item.pieces=checked?[...new Set([...item.pieces,id])]:item.pieces.filter(pid=>pid!==id);saveRecitals();renderApp();};
-  window.togglePerformed=function(){const item=ensureRecital();item.performed=!item.performed;saveRecitals();renderApp();toast(item.performed?'월례발표회를 완료했습니다':'완료 표시를 취소했습니다');};
+  window.updateRecital=function(field,value){const allowed=['title','notes'];if(!allowed.includes(field))return;ensureRecital()[field]=value;saveRecitals();saveRecitalToFirebase();if(field!=='notes')renderApp();else toast('회고를 저장했습니다');};
+  window.toggleRecitalCheck=function(id,checked){ensureRecital().checks[id]=checked;saveRecitals();saveRecitalToFirebase();renderApp();};
+  window.toggleRecitalPiece=function(id,checked){const item=ensureRecital();item.pieces=checked?[...new Set([...item.pieces,id])]:item.pieces.filter(pid=>pid!==id);item.remotePieces=recitalPieceSnapshots(item);saveRecitals();saveRecitalToFirebase();renderApp();};
+  window.togglePerformed=function(){const item=ensureRecital();item.performed=!item.performed;saveRecitals();saveRecitalToFirebase();renderApp();toast(item.performed?'월례발표회를 완료했습니다':'완료 표시를 취소했습니다');};
 
   function injectLessonButton(lid){
     const head=document.querySelector('.dcard-head');if(!head)return;
@@ -494,5 +492,6 @@
 
   normalizeRepertoire();
   setupChrome();
+  initRecitalCloud();
   renderApp();
 })();
