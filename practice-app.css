@@ -295,6 +295,14 @@ main{max-width:1160px;padding:24px 22px 72px}
   .intro{padding:24px 17px;border-radius:19px}
   .intro h2{font-size:23px}
   .intro p br{display:none}
+  .start-guide{padding:20px 16px;border-radius:20px}
+  .start-guide h2{font-size:22px}
+  .start-guide-head{gap:9px}
+  .start-guide-head p{font-size:12px}
+  .guide-status{font-size:11px;padding:6px 8px}
+  .approval-guide{grid-template-columns:28px 1fr;gap:9px 11px;padding:14px}
+  .guide-cards{grid-template-columns:1fr;gap:8px}
+  .guide-cards article{padding:13px 14px}
   .dcard-head,.dcard-body,.dcard-foot{padding-left:18px;padding-right:18px}
   .dch-title{font-size:21px}
   .dcard-foot{position:sticky;bottom:calc(70px + env(safe-area-inset-bottom));z-index:10;box-shadow:0 -8px 20px rgba(23,63,53,.06)}
