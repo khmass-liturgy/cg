@@ -18,6 +18,25 @@
     ['feedback','녹음 듣고 보완점 1개 기록'],
     ['rehearsal','발표 순서대로 리허설 완료']
   ];
+  // khcg 기타반 공개 단원 목록 기준 (연락처 등 민감 정보는 포함하지 않음)
+  const MEMBERS=[
+    {id:'m_ch_sohee',name:'최소희 소피아',part:'1st'},
+    {id:'m_lee_yeonsim',name:'이연심 카타리나',part:'1st'},
+    {id:'m_jung_cheol',name:'정철 야고보',part:'2nd'},
+    {id:'m_choi_jinhee',name:'최진희 크리스티나',part:'2nd'},
+    {id:'m_choi_dongmyung',name:'최동명 미카엘',part:'3rd'},
+    {id:'m_choi_soojeong',name:'최수정 소피아',part:'3rd'},
+    {id:'m_ha_myeongran',name:'하명란 소화데레사',part:'3rd'},
+    {id:'m_hwang_jungwon',name:'황정원 요안나',part:'3rd'},
+    {id:'m_park_soonran',name:'박순란 안젤라',part:'3rd'},
+    {id:'m_park_hyunho',name:'박현호 빈첸시오',part:'3rd'},
+    {id:'m_lee_geumseok',name:'이금석 도미니코',part:'파트 미지정'},
+    {id:'m_kim_yongseok',name:'김용석 프란치스코',part:'파트 미지정'},
+    {id:'m_yoo_dongjong',name:'유동종 마르코',part:'파트 미지정'},
+    {id:'m_lee_misook',name:'이미숙 아녜스',part:'파트 미지정'},
+    {id:'m_choi_jaedeok',name:'최재덕 요셉',part:'파트 미지정'}
+  ];
+  const UNASSIGNED_MEMBER={id:'unassigned',name:'담당 미지정',part:'미지정'};
 
   function load(key,fallback){
     try{
@@ -52,7 +71,8 @@
   let recitals=load(KEYS.recitals,{});
   let activeView='today';
   let repFilter='all';
-  let activeUnit='all';
+  let activePart='all';
+  let activeMember='all';
   let sessionMinutes=30;
   let showAddForm=false;
   let focusId=localStorage.getItem(KEYS.focus)||'';
@@ -90,24 +110,23 @@
   function lessonById(id){return typeof allLessons==='function'?allLessons().find(l=>l.id===id):null;}
   function courseForLesson(id){return typeof CUR!=='undefined'?CUR.find(c=>c.lessons.some(l=>l.id===id)):null;}
   function isSavedLesson(id){return repertoire.some(r=>r.lessonId===id);}
-  function unitOptions(){
-    const courses=typeof CUR!=='undefined'?CUR.map(c=>({id:c.id,title:c.title,sub:c.sub||''})):[];
-    return [{id:'personal',title:'개별 곡',sub:'강좌와 연결하지 않은 곡'},...courses];
+  function memberOptions(){return [UNASSIGNED_MEMBER,...MEMBERS];}
+  function memberInfo(id){return memberOptions().find(member=>member.id===id)||UNASSIGNED_MEMBER;}
+  function memberIdFor(item){return item.memberId||'unassigned';}
+  function memberLabel(item){return memberInfo(memberIdFor(item)).name;}
+  function memberPart(item){return memberInfo(memberIdFor(item)).part;}
+  function memberOptionGroups(selectedId){
+    const parts=['1st','2nd','3rd','파트 미지정'];
+    const selected=selectedId||'unassigned';
+    return `<option value="unassigned"${selected==='unassigned'?' selected':''}>담당 미지정</option>`+parts.map(part=>`<optgroup label="${part}">${MEMBERS.filter(member=>member.part===part).map(member=>`<option value="${member.id}"${selected===member.id?' selected':''}>${html(member.name)}</option>`).join('')}</optgroup>`).join('');
   }
-  function unitInfo(id){return unitOptions().find(unit=>unit.id===id)||unitOptions()[0];}
-  function unitIdFor(item){
-    if(item.unitId) return item.unitId;
-    if(item.courseId) return item.courseId;
-    return item.lessonId?courseForLesson(item.lessonId)?.id||'personal':'personal';
-  }
-  function unitLabel(item){return unitInfo(unitIdFor(item)).title;}
   function normalizeRepertoire(){
     let changed=false;
     repertoire=repertoire.map(item=>{
-      const unitId=unitIdFor(item),unit=unitInfo(unitId);
-      if(item.unitId===unitId&&item.courseId===unitId&&item.courseTitle===unit.title)return item;
+      const member=memberInfo(memberIdFor(item));
+      if(item.memberId===member.id&&item.memberName===member.name&&item.memberPart===member.part)return item;
       changed=true;
-      return {...item,unitId,courseId:unitId==='personal'?'':unitId,courseTitle:unit.title};
+      return {...item,memberId:member.id,memberName:member.name,memberPart:member.part};
     });
     if(changed) persist(KEYS.repertoire,repertoire);
   }
