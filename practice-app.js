@@ -303,7 +303,13 @@
     const installBtn=document.getElementById('install-btn');
     if(managerBtn){managerBtn.innerHTML='⚙ <span>관리</span>';managerBtn.setAttribute('aria-label','강좌 관리');}
     if(installBtn){installBtn.innerHTML='📲 <span>설치</span>';installBtn.setAttribute('aria-label','앱 설치');}
-    if(document.querySelector('.practice-nav')) return;
+    const existingNav=document.querySelector('.practice-nav');
+    if(existingNav){
+      const existingAdmin=existingNav.querySelector('[data-view="admin"]');
+      if(isAdminUser()&&!existingAdmin)existingNav.querySelector('.practice-nav-in')?.insertAdjacentHTML('beforeend','<button class="practice-nav-btn" data-view="admin" onclick="setView(\'admin\')"><span class="practice-nav-ico">✓</span><span>단원 승인</span></button>');
+      if(!isAdminUser()&&existingAdmin)existingAdmin.remove();
+      return;
+    }
     const nav=document.createElement('nav');
     nav.className='practice-nav';
     nav.setAttribute('aria-label','주요 메뉴');
@@ -312,6 +318,7 @@
       <button class="practice-nav-btn" data-view="repertoire" onclick="setView('repertoire')"><span class="practice-nav-ico">♬</span><span>레퍼토리</span></button>
       <button class="practice-nav-btn" data-view="recital" onclick="setView('recital')"><span class="practice-nav-ico">★</span><span>월례발표회</span></button>
       <button class="practice-nav-btn" data-view="lessons" onclick="setView('lessons')"><span class="practice-nav-ico">▤</span><span>강좌</span></button>
+      ${isAdminUser()?'<button class="practice-nav-btn" data-view="admin" onclick="setView(\'admin\')"><span class="practice-nav-ico">✓</span><span>단원 승인</span></button>':''}
     </div>`;
     document.querySelector('header')?.after(nav);
   }
@@ -345,9 +352,15 @@
     showBoard(false);
     const home=document.getElementById('home');
     if(!home) return;
-    if(activeView==='repertoire') home.innerHTML=renderRepertoire();
+    if(activeView==='admin') home.innerHTML=renderMemberAdmin();
+    else if(activeView==='repertoire') home.innerHTML=renderRepertoire();
     else if(activeView==='recital') home.innerHTML=renderRecital();
     else home.innerHTML=renderToday();
+  }
+
+  function renderMemberAdmin(){
+    if(!isAdminUser())return `<div class="app-shell"><div class="app-kicker">MEMBER ACCESS</div><h2 class="app-title">관리자 전용 메뉴입니다</h2><p class="app-subtitle">관리자 Google 계정으로 로그인한 뒤 이용할 수 있습니다.</p></div>`;
+    return `<div class="app-shell"><div class="app-kicker">MEMBER ACCESS</div><h2 class="app-title">단원 연결 승인</h2><p class="app-subtitle">요청한 Google 계정과 단원 이름을 확인한 뒤 승인하세요. 승인된 단원은 자기 기록만 볼 수 있습니다.</p>${practiceGate()}<section class="admin-help"><strong>승인 방법</strong><ol><li>단원이 Google 로그인 후 본인 이름으로 연결 요청을 보냅니다.</li><li><b>연결 요청 새로고침</b>을 눌러 요청 목록을 확인합니다.</li><li>이메일과 단원 이름이 맞으면 <b>승인</b>을 누릅니다.</li></ol></section></div>`;
   }
 
   function renderToday(){
@@ -490,8 +503,9 @@
   }
 
   window.setView=function(view){
-    if(!['today','repertoire','recital','lessons'].includes(view)) return;
-    activeView=view;prepareHome();renderApp();window.scrollTo({top:0,behavior:'smooth'});
+    if(!['today','repertoire','recital','lessons','admin'].includes(view)) return;
+    if(view==='admin'&&!isAdminUser()){toast('관리자 계정으로 로그인해 주세요');return;}
+    activeView=view;prepareHome();renderApp();if(view==='admin')window.refreshMemberAccess();window.scrollTo({top:0,behavior:'smooth'});
   };
   window.renderHome=renderApp;
   window.updateProg=updateHeader;
@@ -562,6 +576,6 @@
   normalizeRepertoire();
   setupChrome();
   initRecitalCloud();
-  if(typeof auth!=='undefined'&&auth?.onAuthStateChanged){auth.onAuthStateChanged(user=>{if(!user){practiceAccess={status:'signed-out',memberId:'',message:''};if(!isAdminUser())renderApp();}else if(!isAdminUser())loadMemberPractice();});}
+  if(typeof auth!=='undefined'&&auth?.onAuthStateChanged){auth.onAuthStateChanged(user=>{setupChrome();if(!user){practiceAccess={status:'signed-out',memberId:'',message:''};if(!isAdminUser())renderApp();}else if(!isAdminUser())loadMemberPractice();else renderApp();});}
   renderApp();
 })();
