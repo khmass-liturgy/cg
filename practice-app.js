@@ -100,6 +100,14 @@
     const target=new Date(dateText+'T00:00:00');
     return Math.round((target-now)/86400000);
   }
+  function fourthThursday(month){
+    const [year,monthNumber]=month.split('-').map(Number),first=new Date(year,monthNumber-1,1);
+    const day=1+((4-first.getDay()+7)%7)+21;
+    return `${year}-${String(monthNumber).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
+  const KHCG_SCHEDULE_CONFIG={apiKey:'AIzaSyDzkdnSQqFNG9vG54CAaT8xTi6pJxl8mOQ',authDomain:'khmasscg.firebaseapp.com',databaseURL:'https://khmasscg-default-rtdb.firebaseio.com',projectId:'khmasscg',appId:'1:618708075654:web:fe60dda22f97a878df3d07'};
+  let khcgSchedule={ready:false,rehearsals:[],recitals:[],error:false};
+  let recitalCloud={ready:false,error:'',saving:false};
 
   let repertoire=load(KEYS.repertoire,[]);
   let logs=load(KEYS.logs,{});
