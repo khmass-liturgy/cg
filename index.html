@@ -3444,14 +3444,7 @@ const ADMIN_EMAILS = ["trsumun@gmail.com"];
 // 여기서는 "허용된 구글 계정으로 로그인했는지"만 판단해 UI를 켜고 끔 (실제 쓰기 권한은 함수 안에서 재검증됨)
 let isAdmin = false;
 auth.onAuthStateChanged(function(user){
-  if(user && !ADMIN_EMAILS.includes((user.email||'').toLowerCase())){
-    // 허용되지 않은 구글 계정 — 로그인은 됐지만 운영자로 인정하지 않고 바로 로그아웃
-    const err = document.getElementById('pin-err');
-    if(err){ err.textContent = '이 구글 계정(' + user.email + ')은 운영자로 등록되어 있지 않습니다.'; err.style.display='block'; }
-    auth.signOut();
-    return;
-  }
-  isAdmin = !!user;
+  isAdmin = !!(user && ADMIN_EMAILS.includes((user.email||'').toLowerCase()));
   if(!isAdmin && document.getElementById('mgr').style.display==='block'){
     hideMgr();
   }
@@ -4335,6 +4328,6 @@ async function init(){
 }
 init();
 </script>
-<script src="practice-app.js?v=20260902-shared-plan"></script>
+<script src="practice-app.js?v=20260902-member-private"></script>
 </body>
 </html>
