@@ -115,6 +115,7 @@
   let focusId=localStorage.getItem(KEYS.focus)||'';
   let practiceAccess={status:'signed-out',memberId:'',message:''};
   let practiceSaveTimer=null;
+  let memberAccessRequests=[];
 
   const legacyRenderHome=window.renderHome;
   const legacyOpenLesson=window.openLesson;
@@ -152,8 +153,17 @@
     catch(error){toast('단원 연결 요청에 실패했습니다');}
   };
   window.openAdminMemberPractice=function(){const memberId=document.getElementById('admin-member-view')?.value;if(memberId)loadMemberPractice(memberId);};
+  window.refreshMemberAccess=async function(){
+    try{const result=await functions.httpsCallable('listMemberAccess')({});memberAccessRequests=(result.data?.members||[]).filter(item=>item.status==='pending');renderApp();}
+    catch(error){toast('단원 연결 요청을 불러올 수 없습니다');}
+  };
+  window.approvePracticeAccess=async function(uid,memberId){
+    if(!confirm('이 로그인 계정을 해당 단원으로 승인할까요?'))return;
+    try{await functions.httpsCallable('approveMemberAccess')({uid,memberId});memberAccessRequests=memberAccessRequests.filter(item=>item.uid!==uid);renderApp();toast('단원 연결을 승인했습니다');}
+    catch(error){toast('단원 연결 승인에 실패했습니다');}
+  };
   function practiceGate(){
-    if(isAdminUser())return `<div class="practice-access"><strong>관리자 보기</strong><span>선택한 단원의 개인 연습 기록만 열람할 수 있습니다.</span><div><select id="admin-member-view">${memberOptionGroups(practiceAccess.memberId||'unassigned')}</select><button class="secondary-btn" onclick="openAdminMemberPractice()">단원 기록 열기</button></div></div>`;
+    if(isAdminUser())return `<div class="practice-access"><strong>관리자 보기</strong><span>선택한 단원의 개인 연습 기록만 열람할 수 있습니다.</span><div><select id="admin-member-view">${memberOptionGroups(practiceAccess.memberId||'unassigned')}</select><button class="secondary-btn" onclick="openAdminMemberPractice()">단원 기록 열기</button></div><div class="access-requests"><button class="text-btn" onclick="refreshMemberAccess()">연결 요청 새로고침</button>${memberAccessRequests.length?memberAccessRequests.map(item=>`<div class="access-request"><span>${html(item.email||'이메일 없음')} → ${html(memberLabel({memberId:item.memberId}))}</span><button class="secondary-btn" onclick="approvePracticeAccess('${item.uid}','${item.memberId}')">승인</button></div>`).join(''):'<small>승인 대기 중인 연결 요청이 없습니다.</small>'}</div></div>`;
     if(practiceAccess.status==='approved')return '';
     if(practiceAccess.status==='signed-out')return `<div class="practice-access"><strong>내 연습 기록</strong><p>Google 로그인 후 관리자 승인된 본인 기록만 볼 수 있습니다.</p><button class="primary-btn" onclick="loginPractice()">Google로 내 연습 기록 열기</button></div>`;
     return `<div class="practice-access"><strong>단원 연결 승인 대기</strong><p>${html(practiceAccess.message||'내 이름을 선택해 관리자에게 연결 요청을 보내세요.')}</p>${typeof auth!=='undefined'&&auth?.currentUser?`<select id="my-member-request">${memberOptionGroups('unassigned')}</select><button class="primary-btn" onclick="requestPracticeAccess()">단원 연결 요청</button>`:`<button class="primary-btn" onclick="loginPractice()">Google 로그인</button>`}</div>`;
