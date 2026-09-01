@@ -52,6 +52,7 @@
   let recitals=load(KEYS.recitals,{});
   let activeView='today';
   let repFilter='all';
+  let activeUnit='all';
   let sessionMinutes=30;
   let showAddForm=false;
   let focusId=localStorage.getItem(KEYS.focus)||'';
@@ -89,6 +90,27 @@
   function lessonById(id){return typeof allLessons==='function'?allLessons().find(l=>l.id===id):null;}
   function courseForLesson(id){return typeof CUR!=='undefined'?CUR.find(c=>c.lessons.some(l=>l.id===id)):null;}
   function isSavedLesson(id){return repertoire.some(r=>r.lessonId===id);}
+  function unitOptions(){
+    const courses=typeof CUR!=='undefined'?CUR.map(c=>({id:c.id,title:c.title,sub:c.sub||''})):[];
+    return [{id:'personal',title:'개별 곡',sub:'강좌와 연결하지 않은 곡'},...courses];
+  }
+  function unitInfo(id){return unitOptions().find(unit=>unit.id===id)||unitOptions()[0];}
+  function unitIdFor(item){
+    if(item.unitId) return item.unitId;
+    if(item.courseId) return item.courseId;
+    return item.lessonId?courseForLesson(item.lessonId)?.id||'personal':'personal';
+  }
+  function unitLabel(item){return unitInfo(unitIdFor(item)).title;}
+  function normalizeRepertoire(){
+    let changed=false;
+    repertoire=repertoire.map(item=>{
+      const unitId=unitIdFor(item),unit=unitInfo(unitId);
+      if(item.unitId===unitId&&item.courseId===unitId&&item.courseTitle===unit.title)return item;
+      changed=true;
+      return {...item,unitId,courseId:unitId==='personal'?'':unitId,courseTitle:unit.title};
+    });
+    if(changed) persist(KEYS.repertoire,repertoire);
+  }
 
   function setupChrome(){
     const title=document.querySelector('.brand-txt h1');
@@ -196,18 +218,20 @@
   }
 
   function renderRepertoire(){
-    const filtered=repertoire.filter(r=>repFilter==='all'||r.stage===repFilter).sort((a,b)=>(STAGES[a.stage]?.order||1)-(STAGES[b.stage]?.order||1));
+    const units=unitOptions();
+    const filtered=repertoire.filter(r=>(repFilter==='all'||r.stage===repFilter)&&(activeUnit==='all'||unitIdFor(r)===activeUnit)).sort((a,b)=>(STAGES[a.stage]?.order||1)-(STAGES[b.stage]?.order||1));
     return `<div class="app-shell">
-      <div class="app-kicker">MY REPERTOIRE</div><h2 class="app-title">한 곡씩, 무대에 오를 때까지</h2><p class="app-subtitle">현재 속도와 목표 속도, 보완할 한 가지를 기록하면 다음 연습이 선명해집니다.</p>
+      <div class="app-kicker">MY REPERTOIRE</div><h2 class="app-title">단원별로, 한 곡씩 무대에</h2><p class="app-subtitle">과정·단원을 먼저 고르고 각 곡의 속도와 보완점을 따로 기록하세요.</p>
+      <div class="unit-filter-wrap"><div class="unit-filter-label">과정 · 단원</div><div class="filter-pills unit-pills">${[{id:'all',title:'전체'},...units].map(unit=>{const count=unit.id==='all'?repertoire.length:repertoire.filter(r=>unitIdFor(r)===unit.id).length;return `<button class="filter-pill${activeUnit===unit.id?' active':''}" onclick="setUnitFilter('${unit.id}')">${html(unit.title)} ${count}</button>`;}).join('')}</div></div>
       <div class="repertoire-toolbar"><div class="filter-pills">${[['all','전체'],['learning','익히는 중'],['polishing','다듬는 중'],['ready','발표 가능']].map(([key,label])=>`<button class="filter-pill${repFilter===key?' active':''}" onclick="setRepFilter('${key}')">${label} ${key==='all'?repertoire.length:repertoire.filter(r=>r.stage===key).length}</button>`).join('')}</div><button class="primary-btn" onclick="toggleAddForm()">＋ 곡 추가</button></div>
-      ${showAddForm?`<form class="add-form" onsubmit="addManualRepertoire(event)"><div class="form-title">새 레퍼토리</div><div class="form-grid"><div class="app-field"><label for="rep-title">곡명 *</label><input id="rep-title" required maxlength="80" placeholder="예: 로망스"></div><div class="app-field"><label for="rep-composer">작곡가</label><input id="rep-composer" maxlength="60" placeholder="예: Anonymous"></div><div class="app-field"><label for="rep-target">목표 BPM</label><input id="rep-target" type="number" min="20" max="240" value="80"></div><button class="primary-btn" type="submit">저장</button></div></form>`:''}
-      ${filtered.length?`<div class="repertoire-list">${filtered.map((item,i)=>renderRepCard(item,i)).join('')}</div>`:`<div class="empty-state"><div class="empty-icon">♬</div><div class="empty-title">${repertoire.length?'이 단계의 곡이 없습니다':'아직 담은 곡이 없습니다'}</div><p class="empty-copy">연습 중인 곡을 직접 추가하거나 강좌에서 골라 담아보세요. 기록은 현재 기기에 안전하게 저장됩니다.</p><button class="primary-btn" onclick="toggleAddForm()">＋ 곡 추가</button></div>`}
+      ${showAddForm?`<form class="add-form" onsubmit="addManualRepertoire(event)"><div class="form-title">새 레퍼토리</div><div class="form-grid unit-add-grid"><div class="app-field"><label for="rep-title">곡명 *</label><input id="rep-title" required maxlength="80" placeholder="예: 로망스"></div><div class="app-field"><label for="rep-unit">소속 단원</label><select id="rep-unit">${units.map(unit=>`<option value="${unit.id}"${activeUnit===unit.id?' selected':''}>${html(unit.title)}</option>`).join('')}</select></div><div class="app-field"><label for="rep-composer">작곡가</label><input id="rep-composer" maxlength="60" placeholder="예: Anonymous"></div><div class="app-field"><label for="rep-target">목표 BPM</label><input id="rep-target" type="number" min="20" max="240" value="80"></div><button class="primary-btn" type="submit">저장</button></div></form>`:''}
+      ${filtered.length?`<div class="repertoire-list">${filtered.map((item,i)=>renderRepCard(item,i)).join('')}</div>`:`<div class="empty-state"><div class="empty-icon">♬</div><div class="empty-title">${repertoire.length?'이 단원의 곡이 없습니다':'아직 담은 곡이 없습니다'}</div><p class="empty-copy">강좌에서 담은 곡은 해당 과정에 자동 분류됩니다. 직접 추가하는 곡도 소속 단원을 정할 수 있습니다.</p><button class="primary-btn" onclick="toggleAddForm()">＋ 곡 추가</button></div>`}
     </div>`;
   }
 
   function renderRepCard(item,index){
-    return `<article class="rep-card"><div class="rep-card-top"><div class="rep-rank">${String(index+1).padStart(2,'0')}</div><div class="rep-info"><div class="rep-title">${html(item.title)}</div><div class="rep-composer">${html(item.composer||item.courseTitle||'작곡가 미입력')}</div></div><select class="stage-select" data-stage="${html(item.stage)}" aria-label="숙련 단계" onchange="updateRep('${item.id}','stage',this.value)">${Object.entries(STAGES).map(([k,v])=>`<option value="${k}"${item.stage===k?' selected':''}>${v.label}</option>`).join('')}</select></div>
-      <div class="rep-controls"><div class="compact-field"><label>현재 BPM</label><input type="number" min="20" max="240" value="${Number(item.currentBpm||40)}" onchange="updateRep('${item.id}','currentBpm',this.value)"></div><div class="compact-field"><label>목표 BPM</label><input type="number" min="20" max="240" value="${Number(item.targetBpm||80)}" onchange="updateRep('${item.id}','targetBpm',this.value)"></div></div>
+    return `<article class="rep-card"><div class="rep-card-top"><div class="rep-rank">${String(index+1).padStart(2,'0')}</div><div class="rep-info"><div class="rep-title">${html(item.title)}</div><div class="rep-composer"><span class="unit-chip">${html(unitLabel(item))}</span> ${html(item.composer||'')}</div></div><select class="stage-select" data-stage="${html(item.stage)}" aria-label="숙련 단계" onchange="updateRep('${item.id}','stage',this.value)">${Object.entries(STAGES).map(([k,v])=>`<option value="${k}"${item.stage===k?' selected':''}>${v.label}</option>`).join('')}</select></div>
+      <div class="rep-controls"><div class="compact-field rep-unit-control"><label>소속 단원</label><select aria-label="소속 단원" onchange="updateRepUnit('${item.id}',this.value)">${unitOptions().map(unit=>`<option value="${unit.id}"${unitIdFor(item)===unit.id?' selected':''}>${html(unit.title)}</option>`).join('')}</select></div><div class="compact-field"><label>현재 BPM</label><input type="number" min="20" max="240" value="${Number(item.currentBpm||40)}" onchange="updateRep('${item.id}','currentBpm',this.value)"></div><div class="compact-field"><label>목표 BPM</label><input type="number" min="20" max="240" value="${Number(item.targetBpm||80)}" onchange="updateRep('${item.id}','targetBpm',this.value)"></div></div>
       <textarea class="rep-note" maxlength="220" placeholder="다음 연습에서 고칠 한 가지" onchange="updateRep('${item.id}','note',this.value)">${html(item.note||'')}</textarea>
       <div class="rep-actions"><button class="link-btn" onclick="chooseFocus('${item.id}')">◎ 오늘 집중곡</button><div>${item.lessonId?`<button class="link-btn" onclick="openRepLesson('${item.lessonId}')">강좌</button>`:''}<button class="link-btn" style="color:#a34c40;margin-left:10px" onclick="removeRep('${item.id}')">삭제</button></div></div></article>`;
   }
@@ -226,7 +250,7 @@
       <div class="recital-layout"><section class="recital-card featured"><span class="month-badge">★ ${html(key.replace('-','.'))} 월례회</span><div class="recital-name">${html(item.title)}</div><div class="recital-date">${html(item.date)} · 교하성당 클래식기타반</div><div class="countdown"><strong>${dday}</strong><span>${item.performed?'발표를 완료했습니다':'무대까지 남은 시간'}</span></div><div class="readiness"><div class="readiness-top"><span>준비도</span><strong>${readiness}%</strong></div><div class="readiness-track"><div class="readiness-fill" style="width:${readiness}%"></div></div></div></section>
       <section class="recital-card"><div class="form-title">발표회 설정</div><div class="recital-fields"><div class="app-field"><label>발표회 이름</label><input value="${html(item.title)}" maxlength="60" onchange="updateRecital('title',this.value)"></div><div class="app-field"><label>발표일</label><input type="date" value="${html(item.date)}" onchange="updateRecital('date',this.value)"></div></div><div class="form-title" style="margin-top:21px">준비 체크</div><div class="check-list"><label class="check-row"><input type="checkbox" ${item.pieces.length?'checked':''} disabled><span>발표곡 1곡 이상 선택</span></label>${CHECKS.map(([id,label])=>`<label class="check-row"><input type="checkbox" ${item.checks?.[id]?'checked':''} onchange="toggleRecitalCheck('${id}',this.checked)"><span>${label}</span></label>`).join('')}</div></section></div>
       <div class="app-section-head"><div><h3 class="app-section-title">이번 달 발표곡</h3><p class="app-section-note">발표 가능 곡을 우선 선택하되, 도전곡 한 곡도 좋습니다.</p></div><span class="app-section-note">${item.pieces.length}곡 선택</span></div>
-      ${repertoire.length?`<div class="repertoire-list">${repertoire.map(r=>`<label class="recital-piece"><input type="checkbox" ${item.pieces.includes(r.id)?'checked':''} onchange="toggleRecitalPiece('${r.id}',this.checked)"><div class="recital-piece-info"><div class="recital-piece-title">${html(r.title)}</div><div class="recital-piece-sub">${html(stageLabel(r.stage))} · ${Number(r.currentBpm||40)}/${Number(r.targetBpm||80)} BPM</div></div></label>`).join('')}</div>`:`<div class="empty-state"><div class="empty-icon">★</div><div class="empty-title">먼저 발표할 곡을 준비해보세요</div><p class="empty-copy">레퍼토리에 곡을 추가하면 이번 달 발표곡으로 선택할 수 있습니다.</p><button class="primary-btn" onclick="setView('repertoire');toggleAddForm()">레퍼토리 추가</button></div>`}
+      ${repertoire.length?`<div class="repertoire-list">${repertoire.map(r=>`<label class="recital-piece"><input type="checkbox" ${item.pieces.includes(r.id)?'checked':''} onchange="toggleRecitalPiece('${r.id}',this.checked)"><div class="recital-piece-info"><div class="recital-piece-title">${html(r.title)}</div><div class="recital-piece-sub">${html(unitLabel(r))} · ${html(stageLabel(r.stage))} · ${Number(r.currentBpm||40)}/${Number(r.targetBpm||80)} BPM</div></div></label>`).join('')}</div>`:`<div class="empty-state"><div class="empty-icon">★</div><div class="empty-title">먼저 발표할 곡을 준비해보세요</div><p class="empty-copy">레퍼토리에 곡을 추가하면 이번 달 발표곡으로 선택할 수 있습니다.</p><button class="primary-btn" onclick="setView('repertoire');toggleAddForm()">레퍼토리 추가</button></div>`}
       <div class="app-section-head"><div><h3 class="app-section-title">발표 후 한 줄 회고</h3><p class="app-section-note">잘한 점 하나와 다음 달에 바꿀 점 하나면 충분합니다.</p></div></div><div class="add-form"><div class="app-field"><textarea rows="4" maxlength="500" placeholder="예: 긴장했지만 끝까지 멈추지 않았다. 다음 달에는 템포를 조금 낮춰 준비하자." onchange="updateRecital('notes',this.value)">${html(item.notes||'')}</textarea></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="${item.performed?'secondary-btn':'primary-btn'}" onclick="togglePerformed()">${item.performed?'✓ 발표 완료됨':'발표 완료로 기록'}</button></div></div>
     </div>`;
   }
@@ -255,11 +279,13 @@
     saveLogs();renderApp();toast(`${sessionMinutes}분 연습을 기록했습니다`);
   };
   window.setRepFilter=function(filter){repFilter=filter;renderApp();};
+  window.setUnitFilter=function(unitId){activeUnit=unitId;renderApp();};
   window.toggleAddForm=function(){showAddForm=!showAddForm;renderApp();setTimeout(()=>document.getElementById('rep-title')?.focus(),50);};
   window.addManualRepertoire=function(event){
     event.preventDefault();
     const title=document.getElementById('rep-title')?.value.trim();if(!title)return;
-    repertoire.unshift({id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''});
+    const unit=unitInfo(document.getElementById('rep-unit')?.value||'personal');
+    repertoire.unshift({id:'rep_'+Date.now().toString(36),title,composer:document.getElementById('rep-composer')?.value.trim()||'',unitId:unit.id,courseId:unit.id==='personal'?'':unit.id,courseTitle:unit.title,stage:'learning',currentBpm:40,targetBpm:Number(document.getElementById('rep-target')?.value||80),note:'',addedAt:localKey(),lastPracticed:''});
     saveRepertoire();showAddForm=false;renderApp();toast('레퍼토리에 곡을 추가했습니다');
   };
   window.updateRep=function(id,field,value){
@@ -267,6 +293,11 @@
     const item=repertoire.find(r=>r.id===id);if(!item)return;
     item[field]=['currentBpm','targetBpm'].includes(field)?Math.max(20,Math.min(240,Number(value)||40)):value;
     saveRepertoire();if(field==='stage')renderApp();else toast('변경 내용을 저장했습니다');
+  };
+  window.updateRepUnit=function(id,unitId){
+    const item=repertoire.find(r=>r.id===id),unit=unitInfo(unitId);if(!item)return;
+    item.unitId=unit.id;item.courseId=unit.id==='personal'?'':unit.id;item.courseTitle=unit.title;
+    saveRepertoire();renderApp();toast(`${unit.title} 단원으로 옮겼습니다`);
   };
   window.chooseFocus=function(id){focusId=id;localStorage.setItem(KEYS.focus,id);toast('오늘의 집중곡으로 지정했습니다');};
   window.removeRep=function(id){
@@ -277,7 +308,7 @@
     const lesson=lessonById(lid),course=courseForLesson(lid);if(!lesson)return;
     const existing=repertoire.find(r=>r.lessonId===lid);
     if(existing){chooseFocus(existing.id);return;}
-    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',courseTitle:course?.title||'',stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
+    const item={id:'rep_'+Date.now().toString(36),lessonId:lid,title:lesson.title,composer:'',unitId:course?.id||'personal',courseId:course?.id||'',courseTitle:course?.title||'개별 곡',stage:'learning',currentBpm:40,targetBpm:80,note:'',addedAt:localKey(),lastPracticed:''};
     repertoire.unshift(item);saveRepertoire();focusId=item.id;localStorage.setItem(KEYS.focus,item.id);injectLessonButton(lid);updateHeader();toast('레퍼토리에 담았습니다');
   };
   window.openRepLesson=function(lid){activeView='lessons';syncNav();legacyOpenLesson(lid);showBoard(false);injectLessonButton(lid);window.scrollTo(0,0);};
@@ -296,6 +327,7 @@
   }
   window.openLesson=function(lid){activeView='lessons';syncNav();legacyOpenLesson(lid);showBoard(false);injectLessonButton(lid);};
 
+  normalizeRepertoire();
   setupChrome();
   renderApp();
 })();
